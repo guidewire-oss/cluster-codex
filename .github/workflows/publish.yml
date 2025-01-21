@@ -1,0 +1,14 @@
+name: Release and Publish Cluster Codex
+run-name: Release and Publish Cluster Codex
+
+on:
+  push:
+    tags:
+      - "v*"
+jobs:
+  release-and-publish:
+    name: 'Release and Publish'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
