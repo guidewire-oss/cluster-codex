@@ -8,11 +8,15 @@ GOPKG=$(GOBASE)
 
 
 # Go build and run commands
-.PHONY: all build run clean cross-compile docker-build docker-run
+.PHONY: all build run clean format
 
 all: build
 
-build:
+format:
+	@echo "📝 Formatting..."
+	go fmt ./...
+
+build: format
 	@echo "🚀 Building..."
 	@GOBIN=$(GOBIN) go build -o $(GOBIN)/$(BINARY_NAME) $(GOPKG)
 
@@ -24,3 +28,7 @@ clean:
 test:
 	@echo "🧪 Running Tests..."
 	@go test $(TEST_FLAGS) -coverprofile=profile.cov ./...
+
+release:
+	@echo "🚀 Releasing..."
+	goreleaser release --verbose --clean --timeout 90m
