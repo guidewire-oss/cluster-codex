@@ -37,6 +37,7 @@ profile.cov
 *.orig
 classes/
 out/
+bin/
 
 ######################
 # Visual Studio Code

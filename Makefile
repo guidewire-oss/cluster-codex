@@ -16,7 +16,11 @@ format:
 	@echo "📝 Formatting..."
 	go fmt ./...
 
-build: format
+mod-tidy:
+	@echo "🧹 Running go mod tidy..."
+	@go mod tidy
+
+build: format mod-tidy
 	@echo "🚀 Building..."
 	@GOBIN=$(GOBIN) go build -o $(GOBIN)/$(BINARY_NAME) $(GOPKG)
 
