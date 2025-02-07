@@ -30,11 +30,27 @@ func (ct *CustomTime) UnmarshalJSON(data []byte) error {
 
 // NewBOM creates a BOM with a valid RFC 4122 UUID as SerialNumber
 func NewBOM() *BOM {
+	creationTime := CustomTime(time.Now())
 	return &BOM{
 		BomFormat:    "CycloneDX",
 		SpecVersion:  "1.6",
 		SerialNumber: uuid.New().String(), // Generate a valid RFC 4122 UUID
 		Version:      1,
+		Metadata: &Metadata{
+			Timestamp: &creationTime,
+			Tools: []Tool{
+				Tool{
+					Vendor:  clusterCodexVendor,
+					Name:    clusterCodex,
+					Version: clusterCodexVersion,
+				},
+			},
+			Component: &Component{
+				Name:    "kubernetes",
+				Version: "", // This should be populated after the server connection
+				Type:    "platform",
+			},
+		},
 	}
 }
 
@@ -71,6 +87,14 @@ type Component struct {
 	Properties []Property `json:"properties,omitempty"`
 	Licenses   []License  `json:"licenses,omitempty"`
 	Hashes     []Hash     `json:"hashes,omitempty"`
+}
+
+func (component *Component) AddProperty(key string, value string) {
+	prop := Property{
+		Name:  key,
+		Value: value,
+	}
+	component.Properties = append(component.Properties, prop)
 }
 
 type Property struct {

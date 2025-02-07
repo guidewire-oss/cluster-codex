@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-type k8sClient struct {
+type K8sClient struct {
 	K8sContext    string
 	Config        *rest.Config
 	Client        kubernetes.Interface
@@ -18,7 +18,7 @@ type k8sClient struct {
 }
 
 // NewClientset takes a path to a kubeconfig file and returns a Kubernetes clientset.
-func GetClient() (*k8sClient, error) {
+func GetClient() (*K8sClient, error) {
 
 	kubeConfigPath := os.Getenv("KUBECONFIG")
 	fmt.Printf("Reading kubeconfig from %s\n", kubeConfigPath)
@@ -45,7 +45,7 @@ func GetClient() (*k8sClient, error) {
 		return nil, err
 	}
 
-	return &k8sClient{
+	return &K8sClient{
 		K8sContext:    "default",
 		Config:        config,
 		Client:        clientset,
