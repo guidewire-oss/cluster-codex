@@ -124,17 +124,40 @@ func AllApiResources(err error, discoveryClient *discovery.DiscoveryClient, k8sC
 		if err != nil {
 			log.Fatalf("Could not retrieve group version %v", err)
 		}
-
+		namespaces := []string{}
+		// First, go through all the non namespaced resources, store them, and get the list of namespaces
 		for _, resource := range resourceList.APIResources {
-
+			if resource.Namespaced {
+				continue
+			}
 			gvr := schema.GroupVersionResource{
 				Group:    gv.Group,
 				Version:  gv.Version,
 				Resource: resource.Name,
 			}
+			k8sResources, k8serr := k8sClient.DynamicClient.Resource(gvr).List(ctx, metav1.ListOptions{})
+			if k8serr != nil {
+				log.Printf("Failed to list resources for %v %v", gvr, k8serr)
+				continue
+			}
+			for _, item := range k8sResources.Items {
+				if resource.Name == "namespace" {
+					namespaces = append(namespaces, item.GetName())
+				}
+				k8sResourceList = append(k8sResourceList, createComponentList(item, "", k8sResourceList)...)
+			}
+		}
 
-			//TODO:update this to get all namespaces
-			namespaces := []string{"atmos-system"}
+		// Next, go through all the namespaced resources, and for each one, get all the resources in each namespace.
+		for _, resource := range resourceList.APIResources {
+			if !resource.Namespaced {
+				continue
+			}
+			gvr := schema.GroupVersionResource{
+				Group:    gv.Group,
+				Version:  gv.Version,
+				Resource: resource.Name,
+			}
 			for _, namespace := range namespaces {
 				k8sResources, k8serr := k8sClient.DynamicClient.Resource(gvr).Namespace(namespace).List(ctx, metav1.ListOptions{})
 				if k8serr != nil {
@@ -151,28 +174,35 @@ func AllApiResources(err error, discoveryClient *discovery.DiscoveryClient, k8sC
 				// We need to create a copy of the item before appending otherwise if we append &item
 				// we are appending pointers to the same underlying objects from resources.Items
 				for _, item := range k8sResources.Items {
-					var properties = []model.Property{}
-					component := model.Component{
-						Type:       "application",
-						Name:       item.GetName(),
-						Version:    item.GetAPIVersion(),
-						PackageURL: "",
-						Properties: properties,
-						Licenses:   nil,
-						Hashes:     nil,
-					}
-
-					component.AddProperty("clx:k8s:componentKind", item.GetKind())
-					component.AddProperty("clx:k8s:componentApiVersion", item.GetAPIVersion())
-					component.AddProperty("clx:k8s:namespace", namespace)
-					addLabelIfExists(item, "helm.sh/chart", &component, "clx:k8s:componentVersion")
-
-					k8sResourceList = append(k8sResourceList, component)
-					log.Printf("Current resource: %s %s %s", item.GetName(), item.GetKind(), item.GetNamespace())
-
+					k8sResourceList = append(k8sResourceList, createComponentList(item, namespace, k8sResourceList)...)
 				}
 			}
 		}
+
+		//
+		//	//TODO:update this to get all namespaces
+		//	// namespaces := []string{"atmos-system"}
+		//	for _, namespace := range namespaces {
+		//		//k8sResources, k8serr := k8sClient.DynamicClient.Resource(gvr).Namespace(namespace).List(ctx, metav1.ListOptions{})
+		//		k8sResources, k8serr := k8sClient.DynamicClient.Resource(gvr).List(ctx, metav1.ListOptions{})
+		//		if k8serr != nil {
+		//			log.Printf("Failed to list resources in namespace %v %s %v", gvr, namespace, k8serr)
+		//			continue
+		//		}
+		//
+		//		if k8sResources == nil || len(k8sResources.Items) == 0 {
+		//			log.Printf("No resources found for GVR %v in namespace %s", gvr, namespace)
+		//			continue
+		//		}
+		//
+		//		// Append the items to the resourceList slice
+		//		// We need to create a copy of the item before appending otherwise if we append &item
+		//		// we are appending pointers to the same underlying objects from resources.Items
+		//		for _, item := range k8sResources.Items {
+		//			k8sResourceList = createComponentList(item, namespace, k8sResourceList)
+		//		}
+		//	}
+		//}
 
 		//for _, resource := range resourceList.APIResources {
 		//	component := model.Component{
@@ -189,6 +219,33 @@ func AllApiResources(err error, discoveryClient *discovery.DiscoveryClient, k8sC
 	}
 
 	return k8sResourceList, nil
+}
+
+func createComponentList(item unstructured.Unstructured, namespace string, k8sResourceList []model.Component) []model.Component {
+	var properties = []model.Property{}
+	component := model.Component{
+		Type:       "application",
+		Name:       item.GetName(),
+		Version:    item.GetAPIVersion(),
+		PackageURL: "",
+		Properties: properties,
+		Licenses:   nil,
+		Hashes:     nil,
+	}
+
+	namespaceTemp := "No Namespace"
+	if namespace != "" {
+		namespaceTemp = namespace
+	}
+
+	component.AddProperty("clx:k8s:componentKind", item.GetKind())
+	component.AddProperty("clx:k8s:componentApiVersion", item.GetAPIVersion())
+	component.AddProperty("clx:k8s:namespace", namespaceTemp)
+	addLabelIfExists(item, "helm.sh/chart", &component, "clx:k8s:componentVersion")
+
+	k8sResourceList = append(k8sResourceList, component)
+	log.Printf("Current resource: %s %s %s", item.GetName(), item.GetKind(), namespaceTemp)
+	return k8sResourceList
 }
 
 func addLabelIfExists(item unstructured.Unstructured, label string, component *model.Component, propertyKey string) {
