@@ -26,6 +26,12 @@ func GetClient() (*K8sClient, error) {
 	if kubeConfigPath == "" {
 		kubeConfigPath = os.Getenv("HOME") + "/.kube/config"
 	}
+	if _, err := os.Stat(kubeConfigPath); os.IsNotExist(err) {
+		log.Fatalf("File does not exist: %s", kubeConfigPath)
+	} else if err != nil {
+		log.Fatalf("Error accessing file: %v", err)
+	}
+
 	config, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
 	if err != nil {
 		log.Printf("Error creating config: %v", err)

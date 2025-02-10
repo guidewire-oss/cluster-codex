@@ -38,6 +38,7 @@ profile.cov
 classes/
 out/
 bin/
+output.json
 
 ######################
 # Visual Studio Code

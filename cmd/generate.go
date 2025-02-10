@@ -16,6 +16,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 )
 
 var (
@@ -38,6 +39,7 @@ func init() {
 }
 
 func runGenerate(cmd *cobra.Command, _ []string) error {
+	start := time.Now()
 	k8sClient, err := k8.GetClient()
 	if err != nil {
 		log.Fatalf("Error creating Kubernetes client: %v", err)
@@ -76,7 +78,10 @@ func runGenerate(cmd *cobra.Command, _ []string) error {
 		fmt.Println("Error writing to file:", err)
 		return err
 	}
-
+	elapsed := time.Since(start)
+	rounded := elapsed.Round(time.Second)
+	seconds := int64(rounded / time.Second)
+	fmt.Printf("generate command took %d seconds\n", seconds)
 	return err
 }
 
@@ -128,10 +133,10 @@ func AllApiResources(err error, discoveryClient *discovery.DiscoveryClient, k8sC
 				Resource: resource.Name,
 			}
 
-			//TODO:upadte this to get all namespaces
+			//TODO:update this to get all namespaces
 			namespaces := []string{"atmos-system"}
 			for _, namespace := range namespaces {
-				k8sResources, k8serr := k8sClient.DynamicClient.Resource(gvr).List(ctx, metav1.ListOptions{})
+				k8sResources, k8serr := k8sClient.DynamicClient.Resource(gvr).Namespace(namespace).List(ctx, metav1.ListOptions{})
 				if k8serr != nil {
 					log.Printf("Failed to list resources in namespace %v %s %v", gvr, namespace, k8serr)
 					continue
