@@ -8,7 +8,7 @@ GOPKG=$(GOBASE)
 
 
 # Go build and run commands
-.PHONY: all build run clean format
+.PHONY: all build run clean format test
 
 all: build
 
@@ -36,3 +36,12 @@ test:
 release:
 	@echo "🚀 Releasing..."
 	goreleaser release --verbose --clean --timeout 90m
+
+setup-test-data:
+	@echo "🚀 Applying Kubernetes Test Data..."
+	kubectl apply -f test/k8s/test-data.yaml
+
+teardown-test-data:
+	@echo "🧹 Cleaning Up Kubernetes Test Data..."
+	kubectl delete -f test/k8s/test-data.yaml || true
+

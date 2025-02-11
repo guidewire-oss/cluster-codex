@@ -22,5 +22,14 @@ jobs:
       - name: 'Setup cluster'
         uses: helm/kind-action@v1
 
+      - name: 'Set up Kubernetes Test Data'
+        run: make setup-test-data
+
       - name: 'Build and Test'
+        env:
+          TEST_FLAGS: '-v'
         run: make mod-tidy test
+
+      - name: 'Clean up Kubernetes Test Data'
+        if: always() # Ensures it runs even if tests fail
+        run: make teardown-test-data

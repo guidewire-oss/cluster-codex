@@ -97,6 +97,15 @@ func (component *Component) AddProperty(key string, value string) {
 	component.Properties = append(component.Properties, prop)
 }
 
+func (component *Component) GetProperty(name string) (string, bool) {
+	for _, prop := range component.Properties {
+		if prop.Name == name {
+			return prop.Value, true
+		}
+	}
+	return "", false
+}
+
 type Property struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
