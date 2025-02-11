@@ -19,12 +19,12 @@ func TestListOneResource(t *testing.T) {
 	gvr := schema.GroupVersionResource{
 		Group:    "",
 		Version:  "v1",
-		Resource: "pods",
+		Resource: "endpoints",
 	}
 
-	namespace := "atmos-system"
+	namespace := "keda-system"
 
-	k8sResources, k8serr := k8sClient.DynamicClient.Resource(gvr).Namespace(namespace).List(ctx, metav1.ListOptions{})
+	k8sResources, k8serr := k8sClient.DynamicClient.Resource(gvr).List(ctx, metav1.ListOptions{})
 	if k8serr != nil {
 		log.Fatalf("Failed to list resources in namespace %v %s %v", gvr, namespace, k8serr)
 	}
