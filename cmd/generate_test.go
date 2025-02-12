@@ -35,7 +35,7 @@ func TestGenerateBom(t *testing.T) {
 }
 
 func TestListResources(t *testing.T) {
-	t.Skip("Skip, used for debugging locally.")
+	//t.Skip("Skip, used for debugging locally.")
 	ctx := context.Background()
 	k8sClient, err := k8.GetClient()
 	if err != nil {

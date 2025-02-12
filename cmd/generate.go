@@ -160,19 +160,35 @@ func addToComponentList(item unstructured.Unstructured, k8sResourceList *[]model
 	}
 
 	component.AddProperty("clx:k8s:componentKind", item.GetKind())
-	component.AddProperty("clx:k8s:componentApiVersion", item.GetAPIVersion())
 	component.AddProperty("clx:k8s:namespace", item.GetNamespace())
-	addLabelIfExists(item, "helm.sh/chart", &component, "clx:k8s:componentVersion")
+	addVersionForComponent(item, &component, "clx:k8s:componentVersion")
 
 	*k8sResourceList = append(*k8sResourceList, component)
 	log.Printf("Created new component for resource: %s %s %s", item.GetName(), item.GetKind(), item.GetNamespace())
+}
+
+func addVersionForComponent(item unstructured.Unstructured, component *model.Component, key string) {
+	componentKind := item.GetKind()
+	// Get the version based on component kind since there is no standard way of setting component's version in custom resources
+	switch componentKind {
+	case "HelmChart":
+		componentSpec, ok := item.Object["spec"].(map[string]interface{})
+		componentVersion, err := componentSpec["version"].(string)
+		if !ok || !err {
+			log.Println("Fetching version from label helm.sh/chart ")
+			addLabelIfExists(item, "helm.sh/chart", component, "clx:k8s:componentVersion")
+		} else {
+			component.AddProperty(key, componentVersion)
+		}
+	default:
+		addLabelIfExists(item, "helm.sh/chart", component, "clx:k8s:componentVersion")
+	}
 }
 
 func addLabelIfExists(item unstructured.Unstructured, label string, component *model.Component, propertyKey string) {
 	// Get labels map safely
 	labels, ok := item.Object["metadata"].(map[string]interface{})["labels"].(map[string]interface{})
 	if !ok {
-		// fmt.Printf("Info: No Labels found for %s\n", item.GetName())
 		return
 	}
 
