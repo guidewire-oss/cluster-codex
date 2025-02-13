@@ -3,7 +3,9 @@ package k8_test
 import (
 	"cluster-codex/internal/k8"
 	"context"
+	"github.com/onsi/gomega"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	fakediscovery "k8s.io/client-go/discovery/fake"
@@ -36,43 +38,82 @@ var _ = Describe("Kubernetes", Label("unittest"), func() {
 		fakeK8sClient     *k8.K8sClient
 		fakeClientset     *fake.Clientset
 		fakeDynamicClient *dynamicfakeclient.FakeDynamicClient
-		fakeDiscovery     *fakediscovery.FakeDiscovery
+		fakeDiscovery     *CustomFakeDiscovery
+		podGVR            schema.GroupVersionResource
+		mockPods          []unstructured.Unstructured
 	)
 
 	BeforeEach(func() {
 		// Initialize fake Kubernetes clientset
 		fakeClientset = fake.NewSimpleClientset()
 
+		podGVR = schema.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"}
+
 		// Initialize fake dynamic client with custom list kinds
 		fakeDynamicClient = dynamicfakeclient.NewSimpleDynamicClientWithCustomListKinds(
 			runtime.NewScheme(),
 			map[schema.GroupVersionResource]string{
 				// Define the custom GVR for the resources you're testing
-				{Group: "", Version: "v1", Resource: "pods"}:            "PodList",
-				{Group: "apps", Version: "v1", Resource: "deployments"}: "DeploymentList",
+				{Group: "", Version: "v1", Resource: "pods"}: "PodList",
+				//{Group: "", Version: "v1", Resource: "services"}:         "ServiceList",
+				//{Group: "", Version: "apps/v1", Resource: "deployments"}: "DeploymentList",
+				//{Group: "apps", Version: "v1", Resource: "deployments"}:  "DeploymentList",
 			},
 		)
 
-		fakeDiscovery = &fakediscovery.FakeDiscovery{
-			Fake: &fakeClientset.Fake,
+		// Define mock pod resources
+		mockPods = []unstructured.Unstructured{
+			{
+				Object: map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "Pod",
+					"metadata": map[string]interface{}{
+						"name":      "pod-1",
+						"namespace": "default",
+					},
+				},
+			},
+			{
+				Object: map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "Pod",
+					"metadata": map[string]interface{}{
+						"name":      "pod-2",
+						"namespace": "default",
+					},
+				},
+			},
+		}
+
+		// Add mock pods to the fake client tracker
+		for _, pod := range mockPods {
+			_, err := fakeDynamicClient.Resource(podGVR).Namespace("default").Create(context.TODO(), &pod, v1.CreateOptions{})
+			gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		}
+
+		fakeDiscovery = &CustomFakeDiscovery{
+			FakeDiscovery: fakediscovery.FakeDiscovery{
+				Fake: &fakeClientset.Fake,
+			},
 		}
 
 		// Replace ServerPreferredResources to return mock resources
-		fakeDiscovery.Resources = []*v1.APIResourceList{
+		resources := []*v1.APIResourceList{
 			{
 				GroupVersion: "v1",
 				APIResources: []v1.APIResource{
 					{Name: "pods", Namespaced: true, Kind: "Pod"},
-					{Name: "services", Namespaced: true, Kind: "Service"},
+					//{Name: "services", Namespaced: true, Kind: "Service"},
 				},
 			},
-			{
-				GroupVersion: "apps/v1",
-				APIResources: []v1.APIResource{
-					{Name: "deployments", Namespaced: true, Kind: "Deployment"},
-				},
-			},
+			//{
+			//	GroupVersion: "apps/v1",
+			//	APIResources: []v1.APIResource{
+			//		{Name: "deployments", Namespaced: true, Kind: "Deployment"},
+			//	},
+			//},
 		}
+		fakeDiscovery.Resources = resources
 
 		// Initialize K8sClient with fake clients
 		fakeK8sClient = &k8.K8sClient{
