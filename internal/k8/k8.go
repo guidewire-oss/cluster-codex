@@ -28,6 +28,7 @@ type K8sClient struct {
 	Config        *rest.Config
 	Client        kubernetes.Interface
 	DynamicClient dynamic.Interface
+	Discovery     discovery.DiscoveryInterface
 }
 
 // NewClientset takes a path to a kubeconfig file and returns a Kubernetes clientset.
@@ -64,25 +65,23 @@ func GetClient() (*K8sClient, error) {
 		return nil, err
 	}
 
-	return &K8sClient{
+	K8sClient := &K8sClient{
 		K8sContext:    "default",
 		Config:        config,
 		Client:        clientset,
 		DynamicClient: dynamicClient,
-	}, nil
-
-}
-
-func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, error) {
-
+	}
 	// Create discovery client
-	discoveryClient, err := discovery.NewDiscoveryClientForConfig(c.Config)
+	K8sClient.Discovery, err = discovery.NewDiscoveryClientForConfig(config)
 	if err != nil {
 		log.Fatalf("Failed to create discovery client: %v", err)
 	}
+	return K8sClient, nil
+}
 
+func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, error) {
 	// Get all API resources
-	apiResourceLists, err := discoveryClient.ServerPreferredResources()
+	apiResourceLists, err := c.Discovery.ServerPreferredResources()
 	if err != nil {
 		log.Fatalf("Failed to list API groups and resources: %v", err)
 	}
