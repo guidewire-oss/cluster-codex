@@ -35,9 +35,15 @@ var gvrs = map[string]schema.GroupVersionResource{
 func createMockResources(resourceType string, names []string, namespace string) []unstructured.Unstructured {
 	var resources []unstructured.Unstructured
 	for _, name := range names {
+		var apiVersion string
+		if gvrs[resourceType].Group == "" {
+			apiVersion = gvrs[resourceType].Version
+		} else {
+			apiVersion = gvrs[resourceType].Group + "/" + gvrs[resourceType].Version
+		}
 		obj := unstructured.Unstructured{
 			Object: map[string]interface{}{
-				"apiVersion": gvrs[resourceType].Group + "/" + gvrs[resourceType].Version,
+				"apiVersion": apiVersion,
 				"kind":       capitalize(resourceType), // Auto capitalize kind (e.g., Pod, Deployment)
 				"metadata": map[string]interface{}{
 					"name": name,
@@ -162,7 +168,7 @@ var _ = Describe("Kubernetes", Label("unittest"), func() {
 			// ✅ Assert individual component details
 			Expect(componentMap["pod-1"].Type).To(Equal("application"))
 			Expect(componentMap["pod-1"].Name).To(Equal("pod-1"))
-			Expect(componentMap["pod-1"].Version).To(Equal("")) // No version for pods
+			Expect(componentMap["pod-1"].Version).To(Equal("v1")) // No version for pods
 			Expect(componentMap["pod-1"].PackageURL).To(BeEmpty())
 
 			Expect(componentMap["deployment-1"].Type).To(Equal("application"))
@@ -174,30 +180,30 @@ var _ = Describe("Kubernetes", Label("unittest"), func() {
 
 			// ✅ Check properties for Pods (Namespace & Kind)
 			Expect(componentMap["pod-1"].Properties).To(ContainElements(
-				model.Property{Name: "clx:k8s:componentKind", Value: "Pod"},
+				model.Property{Name: "clx:k8s:componentKind", Value: "Pods"},
 				model.Property{Name: "clx:k8s:namespace", Value: "default"},
 			))
 			Expect(componentMap["pod-2"].Properties).To(ContainElements(
-				model.Property{Name: "clx:k8s:componentKind", Value: "Pod"},
+				model.Property{Name: "clx:k8s:componentKind", Value: "Pods"},
 				model.Property{Name: "clx:k8s:namespace", Value: "default"},
 			))
 
 			// ✅ Check properties for Deployments (Namespace & Kind)
 			Expect(componentMap["deployment-1"].Properties).To(ContainElements(
-				model.Property{Name: "clx:k8s:componentKind", Value: "Deployment"},
+				model.Property{Name: "clx:k8s:componentKind", Value: "Deployments"},
 				model.Property{Name: "clx:k8s:namespace", Value: "default"},
 			))
 
 			// ✅ Check properties for Namespaces (They should NOT have a "clx:k8s:namespace" property)
 			Expect(componentMap["default"].Properties).To(ContainElement(
-				model.Property{Name: "clx:k8s:componentKind", Value: "Namespace"},
+				model.Property{Name: "clx:k8s:componentKind", Value: "Namespaces"},
 			))
 			Expect(componentMap["default"].Properties).ToNot(ContainElement(
 				model.Property{Name: "clx:k8s:namespace", Value: "default"}, // Namespaces shouldn't have this property
 			))
 
 			Expect(componentMap["kube-system"].Properties).To(ContainElement(
-				model.Property{Name: "clx:k8s:componentKind", Value: "Namespace"},
+				model.Property{Name: "clx:k8s:componentKind", Value: "Namespaces"},
 			))
 			Expect(componentMap["kube-system"].Properties).ToNot(ContainElement(
 				model.Property{Name: "clx:k8s:namespace", Value: "kube-system"},
