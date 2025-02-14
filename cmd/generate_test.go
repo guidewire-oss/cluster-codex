@@ -2,12 +2,14 @@ package cmd_test
 
 import (
 	. "cluster-codex/cmd"
+	"cluster-codex/internal/k8"
 	"cluster-codex/internal/k8/k8fakes"
 	"cluster-codex/internal/model"
 	"context"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 //func TestGenerateBom(t *testing.T) {
@@ -117,6 +119,11 @@ import (
 //	assert.Nil(t, bom)
 //}
 
+func TestCmd(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Generate Suite")
+}
+
 var _ = Describe("GenerateBOM", Label("unittest"), func() {
 	var fakeK8sClient *k8fakes.FakeK8sClientInterface
 
@@ -159,6 +166,37 @@ var _ = Describe("GenerateBOM", Label("unittest"), func() {
 			bom := GenerateBOM(fakeK8sClient)
 
 			Expect(bom).To(BeNil())
+		})
+	})
+})
+
+var _ = Describe("GenerateBOM", Label("integration"), func() {
+
+	Context("When generate BOM is called should return valid BOM", func() {
+		k8client, err := k8.GetClient()
+		Expect(err).To(BeNil())
+		bom := GenerateBOM(k8client)
+
+		Expect(bom).ToNot(BeNil())
+
+		It("should have valid metadata and components", func() {
+			Expect(bom.BomFormat).To(Equal("CycloneDX"))
+			Expect(bom.SpecVersion).To(Equal("1.6"))
+			Expect(bom.Metadata).To(Not(BeNil()))
+			Expect(len(bom.Components)).To(BeNumerically(">", 0))
+		})
+		It("should find test deployment", func() {
+
+			components := bom.FindComponents("nginx-deployment", "Deployment", "test")
+			Expect(len(components)).To(BeNumerically("==", 1))
+		})
+		It("should find test namespace", func() {
+			components := bom.FindComponents("test", "Namespace", "")
+			Expect(len(components)).To(BeNumerically("==", 1))
+		})
+		It("should not find a non-existent pod", func() {
+			components := bom.FindComponents("non-existent-pod", "Pod", "default")
+			Expect(len(components)).To(BeNumerically("==", 0))
 		})
 	})
 })

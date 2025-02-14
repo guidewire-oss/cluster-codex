@@ -1,6 +1,7 @@
 package k8
 
 import (
+	"cluster-codex/internal/config"
 	"cluster-codex/internal/model"
 	"context"
 	"fmt"
@@ -96,6 +97,7 @@ func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, er
 		// First, go through all the non namespaced resources, store them, and get the list of namespaces
 		for _, resource := range resourceList.APIResources {
 			log.Printf("Processing resource %s", resource.Name)
+			config.ClxLogger.Info("Processing resource", "resource", resource.Name)
 			gvr := schema.GroupVersionResource{
 				Group:    gv.Group,
 				Version:  gv.Version,
@@ -103,11 +105,12 @@ func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, er
 			}
 			k8sResources, k8serr := c.DynamicClient.Resource(gvr).List(ctx, metav1.ListOptions{})
 			if k8serr != nil {
+				config.ClxLogger.Error("Failed to list resources for %v %v", gvr, k8serr)
 				log.Printf("Error: Failed to list resources for %v %v", gvr, k8serr)
 				continue
 			}
 			if k8sResources == nil || len(k8sResources.Items) == 0 {
-				log.Printf("Info: No resources found for GVR %v", gvr)
+				config.ClxLogger.Error("Info: No resources found for GVR %v", gvr)
 				continue
 			}
 			for _, item := range k8sResources.Items {
@@ -136,7 +139,7 @@ func addToComponentList(item unstructured.Unstructured, k8sResourceList *[]model
 	addVersionForComponent(item, &component, "clx:k8s:componentVersion")
 
 	*k8sResourceList = append(*k8sResourceList, component)
-	log.Printf("Created new component for resource: %s %s %s", item.GetName(), item.GetKind(), item.GetNamespace())
+	config.ClxLogger.Info("Created new component for resource: %s %s %s", item.GetName(), item.GetKind(), item.GetNamespace())
 }
 
 func addVersionForComponent(item unstructured.Unstructured, component *model.Component, key string) {
@@ -174,7 +177,7 @@ func addLabelIfExists(item unstructured.Unstructured, label string, component *m
 	// Ensure it's a string before returning
 	labelValueStr, valid := labelValue.(string)
 	if !valid {
-		fmt.Printf("Error: label %s is not a string for %s\n", label, item.GetName())
+		config.ClxLogger.Error("Error: label %s is not a string for %s\n", label, item.GetName())
 		return
 	}
 

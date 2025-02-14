@@ -5,7 +5,7 @@ BINARY_NAME=clx
 GOBASE=$(shell pwd)
 GOBIN=$(GOBASE)/bin
 GOPKG=$(GOBASE)
-
+export LABEL_FILTER ?= 'unittest'
 
 # Go build and run commands
 .PHONY: all build run clean format test
@@ -29,14 +29,6 @@ clean:
 	@GOBIN=$(GOBIN) go clean
 	@rm -rf $(GOBIN)/*
 
-test:
-	@echo "🧪 Running Tests..."
-	@go test $(TEST_FLAGS) -coverprofile=profile.cov ./...
-
-release:
-	@echo "🚀 Releasing..."
-	goreleaser release --verbose --clean --timeout 90m
-
 setup-test-data:
 	@echo "🚀 Applying Kubernetes Test Data..."
 	kubectl apply -f test/k8s/test-data.yaml
@@ -44,4 +36,20 @@ setup-test-data:
 teardown-test-data:
 	@echo "🧹 Cleaning Up Kubernetes Test Data..."
 	kubectl delete -f test/k8s/test-data.yaml || true
+
+unit-test:
+	@echo "🧪 Running Unit Tests..."
+#	@go test $(TEST_FLAGS) -coverprofile=profile.cov ./...
+	ginkgo -r -p --label-filter=$(LABEL_FILTER) --succinct --randomize-all
+
+integration-test: setup-test-data
+	@echo "🧪 Running Integration Tests..."
+#	@go test $(TEST_FLAGS) -coverprofile=profile.cov ./...
+	ginkgo -r -p --label-filter=$(LABEL_FILTER) --succinct --randomize-all
+
+release:
+	@echo "🚀 Releasing..."
+	goreleaser release --verbose --clean --timeout 90m
+
+
 
