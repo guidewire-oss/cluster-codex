@@ -2,6 +2,7 @@ package cmd_test
 
 import (
 	. "cluster-codex/cmd"
+	"cluster-codex/internal/config"
 	"cluster-codex/internal/k8"
 	"cluster-codex/internal/k8/k8fakes"
 	"cluster-codex/internal/model"
@@ -124,7 +125,7 @@ func TestCmd(t *testing.T) {
 	RunSpecs(t, "Generate Suite")
 }
 
-var _ = Describe("GenerateBOM", Label("unittest"), func() {
+var _ = Describe("GenerateBOM - Unit", Label("unit"), func() {
 	var fakeK8sClient *k8fakes.FakeK8sClientInterface
 
 	BeforeEach(func() {
@@ -170,7 +171,7 @@ var _ = Describe("GenerateBOM", Label("unittest"), func() {
 	})
 })
 
-var _ = Describe("GenerateBOM", Label("integration"), func() {
+var _ = Describe("GenerateBOM - Integration", Label("integration"), func() {
 
 	Context("When generate BOM is called should return valid BOM", func() {
 		k8client, err := k8.GetClient()
@@ -180,6 +181,7 @@ var _ = Describe("GenerateBOM", Label("integration"), func() {
 		Expect(bom).ToNot(BeNil())
 
 		It("should have valid metadata and components", func() {
+			config.ClxLogger.Info("Hello World")
 			Expect(bom.BomFormat).To(Equal("CycloneDX"))
 			Expect(bom.SpecVersion).To(Equal("1.6"))
 			Expect(bom.Metadata).To(Not(BeNil()))

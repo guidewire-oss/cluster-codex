@@ -5,10 +5,11 @@ BINARY_NAME=clx
 GOBASE=$(shell pwd)
 GOBIN=$(GOBASE)/bin
 GOPKG=$(GOBASE)
-export LABEL_FILTER ?= 'unittest'
+# You can use boolean logic in the LABEL_FILTER, eg export LABEL_FILTER="integration || unit"
+export LABEL_FILTER ?= 'unit'
 
 # Go build and run commands
-.PHONY: all build run clean format test
+.PHONY: all build run clean format test unit-test integration-test setup-test-data teardown-test-data
 
 all: build
 
@@ -40,12 +41,17 @@ teardown-test-data:
 unit-test:
 	@echo "🧪 Running Unit Tests..."
 #	@go test $(TEST_FLAGS) -coverprofile=profile.cov ./...
-	ginkgo -r -p --label-filter=$(LABEL_FILTER) --succinct --randomize-all
+	ginkgo -r -p --label-filter=unit --randomize-all
+
+test:
+	@echo "🧪 Running All Tests with labels \"$(LABEL_FILTER)\"..."
+#	@go test $(TEST_FLAGS) -coverprofile=profile.cov ./...
+	ginkgo -r -p --label-filter="$(LABEL_FILTER)" --succinct --randomize-all
 
 integration-test: setup-test-data
 	@echo "🧪 Running Integration Tests..."
 #	@go test $(TEST_FLAGS) -coverprofile=profile.cov ./...
-	ginkgo -r -p --label-filter=$(LABEL_FILTER) --succinct --randomize-all
+	ginkgo -r -p --label-filter=integration --succinct --randomize-all
 
 release:
 	@echo "🚀 Releasing..."

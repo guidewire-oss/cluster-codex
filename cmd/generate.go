@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"cluster-codex/internal/config"
 	"cluster-codex/internal/k8"
 	"cluster-codex/internal/model"
 	"context"
@@ -91,7 +92,7 @@ func GenerateBOM(k8client k8.K8sClientInterface) *model.BOM {
 
 	componentList, err := k8client.GetAllComponents(ctx)
 	if err != nil {
-		log.Printf("Error getting resources: %v", err)
+		config.ClxLogger.Error("Error getting resources.", "error", err)
 		return nil // Handle error case by returning nil BOM or some default value
 	}
 

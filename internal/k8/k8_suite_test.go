@@ -69,7 +69,7 @@ func (c *CustomFakeDiscovery) ServerPreferredResources() ([]*v1.APIResourceList,
 	return c.Resources, nil
 }
 
-var _ = Describe("Kubernetes", Label("unittest"), func() {
+var _ = Describe("Kubernetes", Label("unit"), func() {
 	var (
 		fakeK8sClient     *k8.K8sClient
 		fakeClientset     *fake.Clientset
@@ -213,6 +213,11 @@ var _ = Describe("Kubernetes", Label("unittest"), func() {
 			Expect(componentMap["pod-1"].Licenses).To(BeEmpty())
 			Expect(componentMap["pod-1"].Hashes).To(BeEmpty())
 
+			// Make sure that there are no services components - we didn't give any mock data for them.
+			for _, comp := range components {
+				kind, found := comp.GetProperty("clx:k8s:componentKind")
+				Expect(found && kind == "Services").ToNot(BeTrue(), "Expected not to find a 'Service', but found one")
+			}
 		})
 	})
 })
