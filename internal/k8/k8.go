@@ -5,6 +5,7 @@ import (
 	"cluster-codex/internal/model"
 	"context"
 	"fmt"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -122,45 +123,41 @@ func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, er
 }
 
 func (c *K8sClient) GetAllImages(ctx context.Context, namespaceList []string) ([]model.Component, error) {
-	// Get all API resources
-	apiResourceLists, err := c.Discovery.ServerPreferredResources()
-	if err != nil {
-		log.Fatalf("Failed to list API groups and resources: %v", err)
-	}
-
-	var k8sResourceList []model.Component
-
-	for _, resourceList := range apiResourceLists {
-		gv, err := schema.ParseGroupVersion(resourceList.GroupVersion)
+	var componentList []model.Component
+	for _, namespace := range namespaceList {
+		pods, err := c.Client.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
 		if err != nil {
-			log.Fatalf("Could not retrieve group version %v", err)
+			return nil, fmt.Errorf("failed to list pods: %w", err)
 		}
-		// First, go through all the non namespaced resources, store them, and get the list of namespaces
-		for _, resource := range resourceList.APIResources {
-			config.ClxLogger.Info("Processing resource", "resource", resource.Name)
-			gvr := schema.GroupVersionResource{
-				Group:    gv.Group,
-				Version:  gv.Version,
-				Resource: resource.Name,
-			}
-			k8sResources, k8serr := c.DynamicClient.Resource(gvr).List(ctx, metav1.ListOptions{})
-			if k8serr != nil {
-				config.ClxLogger.Error("Failed to list resources for", "resource", gvr.Resource, "error", k8serr)
-				continue
-			}
-			if k8sResources == nil || len(k8sResources.Items) == 0 {
-				config.ClxLogger.Info("No resources found for GVR", "gvr", gvr)
-				continue
-			}
-			for _, item := range k8sResources.Items {
-				addToComponentList(item, &k8sResourceList)
+		config.ClxLogger.Info("Listing pods", "namespace", namespace, "pods", pods.Items)
+		for _, pod := range pods.Items {
+			for _, container := range pod.Spec.Containers {
+				addImageToComponentList(container, namespace, &componentList)
 			}
 		}
 	}
-
-	return k8sResourceList, nil
+	return componentList, nil
 }
 
+func addImageToComponentList(container v1.Container, namespace string, k8sResourceList *[]model.Component) {
+	var properties []model.Property
+	component := model.Component{
+		Type:       "container",
+		Name:       container.Image,
+		Version:    container.Image,
+		PackageURL: "",
+		Properties: properties,
+		Licenses:   nil,
+		Hashes:     nil,
+	}
+
+	component.AddProperty("clx:k8s:componentKind", "Image")
+	component.AddProperty("clx:k8s:namespace", namespace)
+	//addVersionForComponent(item, &component, "clx:k8s:componentVersion")
+
+	*k8sResourceList = append(*k8sResourceList, component)
+	//config.ClxLogger.Info("Created new image for resource:", "name", item.GetName(), "kind", item.GetKind(), "namespace", item.GetNamespace())
+}
 func addToComponentList(item unstructured.Unstructured, k8sResourceList *[]model.Component) {
 	var properties []model.Property
 	component := model.Component{
