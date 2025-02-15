@@ -97,7 +97,19 @@ func GenerateBOM(k8client k8.K8sClientInterface) *model.BOM {
 	}
 
 	bom.Components = componentList
+	var namespaceList []string
+	namespaceComponents := bom.FindComponentsByKind("Namespace", "")
 
+	for _, component := range namespaceComponents {
+		namespaceList = append(namespaceList, component.Name)
+	}
+
+	componentList, err = k8client.GetAllImages(ctx, namespaceList)
+	if err != nil {
+		config.ClxLogger.Error("Error getting images.", "error", err)
+		return nil // Handle error case by returning nil BOM or some default value
+	}
+	bom.Components = append(bom.Components, componentList...)
 	return bom
 }
 

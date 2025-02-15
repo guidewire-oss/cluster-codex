@@ -20,6 +20,7 @@ import (
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . K8sClientInterface
 type K8sClientInterface interface {
 	GetAllComponents(ctx context.Context) ([]model.Component, error)
+	GetAllImages(ctx context.Context, namespaceList []string) ([]model.Component, error)
 }
 
 // K8sClient is the concrete implementation of the K8sClientInterface
@@ -81,6 +82,46 @@ func GetClient() (*K8sClient, error) {
 }
 
 func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, error) {
+	// Get all API resources
+	apiResourceLists, err := c.Discovery.ServerPreferredResources()
+	if err != nil {
+		log.Fatalf("Failed to list API groups and resources: %v", err)
+	}
+
+	var k8sResourceList []model.Component
+
+	for _, resourceList := range apiResourceLists {
+		gv, err := schema.ParseGroupVersion(resourceList.GroupVersion)
+		if err != nil {
+			log.Fatalf("Could not retrieve group version %v", err)
+		}
+		// First, go through all the non namespaced resources, store them, and get the list of namespaces
+		for _, resource := range resourceList.APIResources {
+			config.ClxLogger.Info("Processing resource", "resource", resource.Name)
+			gvr := schema.GroupVersionResource{
+				Group:    gv.Group,
+				Version:  gv.Version,
+				Resource: resource.Name,
+			}
+			k8sResources, k8serr := c.DynamicClient.Resource(gvr).List(ctx, metav1.ListOptions{})
+			if k8serr != nil {
+				config.ClxLogger.Error("Failed to list resources for", "resource", gvr.Resource, "error", k8serr)
+				continue
+			}
+			if k8sResources == nil || len(k8sResources.Items) == 0 {
+				config.ClxLogger.Info("No resources found for GVR", "gvr", gvr)
+				continue
+			}
+			for _, item := range k8sResources.Items {
+				addToComponentList(item, &k8sResourceList)
+			}
+		}
+	}
+
+	return k8sResourceList, nil
+}
+
+func (c *K8sClient) GetAllImages(ctx context.Context, namespaceList []string) ([]model.Component, error) {
 	// Get all API resources
 	apiResourceLists, err := c.Discovery.ServerPreferredResources()
 	if err != nil {

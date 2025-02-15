@@ -116,11 +116,29 @@ func (bom *BOM) FindComponents(name string, kind string, namespace string) []Com
 					props, found := component.GetProperty("clx:k8s:namespace")
 					if found && props == namespace {
 						returnComponents = append(returnComponents, component)
-						continue
 					}
+					continue
 				}
 				returnComponents = append(returnComponents, component)
 			}
+		}
+	}
+	return returnComponents
+}
+
+func (bom *BOM) FindComponentsByKind(kind string, namespace string) []Component {
+	var returnComponents []Component = make([]Component, 0)
+	for _, component := range bom.Components {
+		props, found := component.GetProperty("clx:k8s:componentKind")
+		if found && props == kind {
+			if namespace != "" {
+				props, found := component.GetProperty("clx:k8s:namespace")
+				if found && props == namespace {
+					returnComponents = append(returnComponents, component)
+				}
+				continue
+			}
+			returnComponents = append(returnComponents, component)
 		}
 	}
 	return returnComponents
