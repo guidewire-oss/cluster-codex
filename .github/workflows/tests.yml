@@ -1,0 +1,44 @@
+name: Tests
+run-name: Unit and Integration Tests run by ${{ github.actor }}
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  tests:
+    name: 'Tests'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v3
+
+      - name: 'Setup Go'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.2'
+
+      - name: 'Install Ginkgo'
+        run: |
+          go install github.com/onsi/ginkgo/v2/ginkgo@v2.22.1
+
+      - name: 'Setup cluster'
+        uses: helm/kind-action@v1
+
+      - name: 'Set up Kubernetes Test Data'
+        run: make setup-test-data
+
+      - name: 'Build and Test - Unit'
+        env:
+          TEST_FLAGS: '-v'
+        run: make mod-tidy unit-test
+
+      - name: 'Build and Test - Integration'
+        env:
+          TEST_FLAGS: '-v'
+        run: make integration-test
+
+      - name: 'Clean up Kubernetes Test Data'
+        if: always() # Ensures it runs even if tests fail
+        run: make teardown-test-data
