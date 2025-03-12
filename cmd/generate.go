@@ -20,6 +20,8 @@ import (
 var (
 	format  string
 	outPath string
+	filters string
+	sort    bool
 )
 
 var GenerateCmd = &cobra.Command{
@@ -28,43 +30,68 @@ var GenerateCmd = &cobra.Command{
 	RunE:  runGenerate,
 }
 
+const defaultFilterFileName = "./filters.json"
+
 func init() {
 	GenerateCmd.Flags().StringVarP(&format, "format", "f", "cyclonedx-json", "Format of the generated BOM.")
 	GenerateCmd.Flags().StringVarP(&outPath, "out-path", "o", "./output.json", "Path and filename of generated cluster codex file.")
-
+	GenerateCmd.Flags().StringVarP(&filters, "filters", "i", defaultFilterFileName, "Path to a json file containing inclusion filters.")
+	GenerateCmd.Flags().BoolVarP(&sort, "sort", "s", false, "Sort the generated BOM JSON in Application, Kind, Name, Namespace order")
 }
 
 func runGenerate(cmd *cobra.Command, _ []string) error {
-	fmt.Printf("Starting generate command\n")
+	config.ClxLogger.Info("Starting generate command\n")
 	start := time.Now()
+
+	// Read filter file, if any.
+	var namespaces []string
+	var err error
+	namespaces, err = GetNamespacesFromJSON(filters)
+	if err != nil {
+		//config.ClxLogger.Error("Error loading filter file", "error", err)
+		//os.Exit(1)
+		config.ClxLogger.Error("Error loading filter file", "error", err)
+		log.Fatalf("Error loading filter file: %v", err)
+	}
+
 	k8sClient, err := k8.GetClient()
 
 	if err != nil {
-		log.Fatalf("Error creating Kubernetes client: %v", err)
+		config.ClxLogger.Error("Error creating Kubernetes client: %v", "error", err)
+		os.Exit(1)
 	}
 	var serverVersion *version.Info
 	serverVersion, err = k8sClient.Client.Discovery().ServerVersion()
 	if err != nil {
-		log.Fatalf("Failed to get server version: %v", err)
+		config.ClxLogger.Error("Failed to get server version: %v", "error", err)
+		os.Exit(1)
 	}
 
 	config.ClxLogger.Info("Git:", "Version", serverVersion.String())
 
-	bom := GenerateBOM(k8sClient)
+	bom := GenerateBOM(k8sClient, namespaces)
+
+	// Sort the BOM so it is consistent
+	if sort {
+		bom.Sort()
+	}
+
+	// Output the BOM as JSON
 	jsonData, err := prettyjson.MarshalIndent(bom, "", "  ")
 	if err != nil {
-		log.Fatalf("Got error converting to json %v", err)
+		config.ClxLogger.Error("Got error converting output BOM to json %v", "error", err)
+		os.Exit(1)
 	}
 
 	// Create a file and write the json
 	err = ValidatePath(outPath)
 	if err != nil {
-		log.Fatalf("Error validating path: %v", err)
+		config.ClxLogger.Error("Error validating path: %v", "error", err)
 	}
 	file, err := os.Create(outPath)
 	if err != nil {
-		fmt.Printf("Error creating file %s: %v\n", outPath, err)
-		return err
+		config.ClxLogger.Error("Error creating file %s: %v\n", outPath, err)
+		os.Exit(1)
 	}
 	defer file.Close()
 
@@ -81,23 +108,37 @@ func runGenerate(cmd *cobra.Command, _ []string) error {
 	return err
 }
 
-func GenerateBOM(k8client k8.K8sClientInterface) *model.BOM {
+func GenerateBOM(k8client k8.K8sClientInterface, namespaces []string) *model.BOM {
 
 	bom := model.NewBOM()
-	ctx := context.Background()
+
+	var ctx context.Context
+	if len(namespaces) > 0 {
+		ctx = context.WithValue(context.Background(), k8.FilterKey, k8.K8sFilter{
+			Namespaces: namespaces,
+		})
+	} else {
+		ctx = context.Background()
+	}
 
 	componentList, err := k8client.GetAllComponents(ctx)
 	if err != nil {
 		config.ClxLogger.Error("Error getting resources.", "error", err)
 		return nil // Handle error case by returning nil BOM or some default value
 	}
-
 	bom.Components = componentList
-	var namespaceList []string
-	namespaceComponents := bom.FindApplicationsByKind("Namespace", "")
 
-	for _, component := range namespaceComponents {
-		namespaceList = append(namespaceList, component.Name)
+	var namespaceList []string
+	// If we are filtering by namespace, only look for images in those namespaces
+	if len(namespaces) > 0 {
+		namespaceList = namespaces
+	} else {
+		// Otherwise look for images in all namespaces
+		namespaceComponents := bom.FindApplicationsByKind("Namespace", "")
+
+		for _, component := range namespaceComponents {
+			namespaceList = append(namespaceList, component.Name)
+		}
 	}
 
 	componentList, err = k8client.GetAllImages(ctx, namespaceList)

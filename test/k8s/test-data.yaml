@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: test
+  name: clx-test
 
 ---
 # Deployment of nginx in the "test" namespace
@@ -10,7 +10,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
-  namespace: test
+  namespace: clx-test
 spec:
   replicas: 1
   selector:

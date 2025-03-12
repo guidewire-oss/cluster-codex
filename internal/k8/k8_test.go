@@ -102,7 +102,7 @@ func (c *CustomFakeDiscovery) ServerPreferredResources() ([]*v1.APIResourceList,
 	return c.Resources, nil
 }
 
-var _ = Describe("Kubernetes", Label("unit"), func() {
+var _ = Describe("Kubernetes - Unit", Label("unit"), func() {
 	mockNamespaceList := []string{"default", "kube-system"}
 	var (
 		fakeK8sClient     *k8.K8sClient
@@ -265,82 +265,110 @@ var _ = Describe("Kubernetes", Label("unit"), func() {
 	})
 
 	Context("when GetAllComponents is called with a K8s client", func() {
-		It("should return all the components in the cluster", func() {
-			components, err := fakeK8sClient.GetAllComponents(context.Background())
+		DescribeTable("should return all the components in the cluster",
+			func(namespaces []string, expectedComponents int, includeKubeSystem bool) {
+				// Setup the filter with the namespaces
+				var ctx context.Context
+				if len(namespaces) == 0 {
+					ctx = context.Background()
+				} else {
+					ctx = context.WithValue(context.Background(), k8.FilterKey, k8.K8sFilter{
+						Namespaces: namespaces,
+					})
+				}
 
-			Expect(err).To(BeNil())
-			// ✅ Assert correct number of components (Pods + Deployments + Namespaces)
-			Expect(len(components)).To(Equal(7)) // pod-1, pod-2, deployment-1, default, kube-system
+				components, err := fakeK8sClient.GetAllComponents(ctx)
 
-			// ✅ Convert list into a map for easy lookup
-			componentMap := make(map[string]model.Component)
-			for _, comp := range components {
-				componentMap[comp.Name] = comp
-			}
+				Expect(err).To(BeNil())
+				// ✅ Assert correct number of components (Pods + Deployments + Namespaces)
+				Expect(len(components)).To(Equal(expectedComponents)) // pod-1, pod-2, pod-3, pod-4, deployment-1, default, kube-system
 
-			// ✅ Assert specific components exist with correct types
-			Expect(componentMap).To(HaveKey("pod-1"))
-			Expect(componentMap).To(HaveKey("pod-2"))
-			Expect(componentMap).To(HaveKey("pod-3"))
-			Expect(componentMap).To(HaveKey("pod-4"))
-			Expect(componentMap).To(HaveKey("deployment-1"))
-			Expect(componentMap).To(HaveKey("default"))     // Namespace
-			Expect(componentMap).To(HaveKey("kube-system")) // Namespace
+				// ✅ Convert list into a map for easy lookup
+				componentMap := make(map[string]model.Component)
+				for _, comp := range components {
+					componentMap[comp.Name] = comp
+				}
 
-			// ✅ Assert individual component details
-			Expect(componentMap["pod-1"].Type).To(Equal("application"))
-			Expect(componentMap["pod-1"].Name).To(Equal("pod-1"))
-			Expect(componentMap["pod-1"].Version).To(Equal("v1")) // No version for pods
-			Expect(componentMap["pod-1"].PackageURL).To(BeEmpty())
+				// ✅ Assert specific components exist with correct types
+				Expect(componentMap).To(HaveKey("pod-1"))
+				Expect(componentMap).To(HaveKey("pod-2"))
+				if includeKubeSystem {
+					Expect(componentMap).To(HaveKey("pod-3"))
+					Expect(componentMap).To(HaveKey("pod-4"))
+				}
+				Expect(componentMap).To(HaveKey("deployment-1"))
+				Expect(componentMap).To(HaveKey("default"))     // Namespace
+				Expect(componentMap).To(HaveKey("kube-system")) // Namespace
 
-			Expect(componentMap["deployment-1"].Type).To(Equal("application"))
-			Expect(componentMap["deployment-1"].Name).To(Equal("deployment-1"))
+				// ✅ Assert individual component details
+				Expect(componentMap["pod-1"].Type).To(Equal("application"))
+				Expect(componentMap["pod-1"].Name).To(Equal("pod-1"))
+				Expect(componentMap["pod-1"].Version).To(Equal("v1")) // No version for pods
+				Expect(componentMap["pod-1"].PackageURL).To(BeEmpty())
 
-			// ✅ Check for namespace handling
-			Expect(componentMap["default"].Type).To(Equal("application"))
-			Expect(componentMap["kube-system"].Type).To(Equal("application"))
+				Expect(componentMap["deployment-1"].Type).To(Equal("application"))
+				Expect(componentMap["deployment-1"].Name).To(Equal("deployment-1"))
 
-			// ✅ Check properties for Pods (Namespace & Kind)
-			Expect(componentMap["pod-1"].Properties).To(ContainElements(
-				model.Property{Name: "clx:k8s:componentKind", Values: []string{"Pods"}},
-				model.Property{Name: "clx:k8s:namespace", Values: []string{"default"}},
-			))
-			Expect(componentMap["pod-2"].Properties).To(ContainElements(
-				model.Property{Name: "clx:k8s:componentKind", Values: []string{"Pods"}},
-				model.Property{Name: "clx:k8s:namespace", Values: []string{"default"}},
-			))
+				// ✅ Check for namespace handling
+				Expect(componentMap["default"].Type).To(Equal("application"))
+				if includeKubeSystem {
+					Expect(componentMap["kube-system"].Type).To(Equal("application"))
+				}
 
-			// ✅ Check properties for Deployments (Namespace & Kind)
-			Expect(componentMap["deployment-1"].Properties).To(ContainElements(
-				model.Property{Name: "clx:k8s:componentKind", Values: []string{"Deployments"}},
-				model.Property{Name: "clx:k8s:namespace", Values: []string{"default"}},
-			))
+				// ✅ Check properties for Pods (Namespace & Kind)
+				Expect(componentMap["pod-1"].Properties).To(ContainElements(
+					model.Property{Name: model.ComponentKind, Values: []string{"Pods"}},
+					model.Property{Name: model.ComponentNamespace, Values: []string{"default"}},
+				))
+				Expect(componentMap["pod-2"].Properties).To(ContainElements(
+					model.Property{Name: model.ComponentKind, Values: []string{"Pods"}},
+					model.Property{Name: model.ComponentNamespace, Values: []string{"default"}},
+				))
+				if includeKubeSystem {
+					Expect(componentMap["pod-3"].Properties).To(ContainElements(
+						model.Property{Name: model.ComponentKind, Values: []string{"Pods"}},
+						model.Property{Name: model.ComponentNamespace, Values: []string{"kube-system"}},
+					))
+					Expect(componentMap["pod-4"].Properties).To(ContainElements(
+						model.Property{Name: model.ComponentKind, Values: []string{"Pods"}},
+						model.Property{Name: model.ComponentNamespace, Values: []string{"kube-system"}},
+					))
+				}
+				// ✅ Check properties for Deployments (Namespace & Kind)
+				Expect(componentMap["deployment-1"].Properties).To(ContainElements(
+					model.Property{Name: model.ComponentKind, Values: []string{"Deployments"}},
+					model.Property{Name: model.ComponentNamespace, Values: []string{"default"}},
+				))
 
-			// ✅ Check properties for Namespaces (They should NOT have a "clx:k8s:namespace" property)
-			Expect(componentMap["default"].Properties).To(ContainElement(
-				model.Property{Name: "clx:k8s:componentKind", Values: []string{"Namespaces"}},
-			))
-			Expect(componentMap["default"].Properties).ToNot(ContainElement(
-				model.Property{Name: "clx:k8s:namespace", Values: []string{"default"}}, // Namespaces shouldn't have this property
-			))
+				// ✅ Check properties for Namespaces (They should NOT have a model.ComponentNamespace property)
+				Expect(componentMap["default"].Properties).To(ContainElement(
+					model.Property{Name: model.ComponentKind, Values: []string{"Namespaces"}},
+				))
+				Expect(componentMap["default"].Properties).ToNot(ContainElement(
+					model.Property{Name: model.ComponentNamespace, Values: []string{"default"}}, // Namespaces shouldn't have this property
+				))
 
-			Expect(componentMap["kube-system"].Properties).To(ContainElement(
-				model.Property{Name: "clx:k8s:componentKind", Values: []string{"Namespaces"}},
-			))
-			Expect(componentMap["kube-system"].Properties).ToNot(ContainElement(
-				model.Property{Name: "clx:k8s:namespace", Values: []string{"kube-system"}},
-			))
+				Expect(componentMap["kube-system"].Properties).To(ContainElement(
+					model.Property{Name: model.ComponentKind, Values: []string{"Namespaces"}},
+				))
+				Expect(componentMap["kube-system"].Properties).ToNot(ContainElement(
+					model.Property{Name: model.ComponentNamespace, Values: []string{"kube-system"}},
+				))
 
-			// ✅ Ensure no licenses/hashes exist since they were not set in mock data
-			Expect(componentMap["pod-1"].Licenses).To(BeEmpty())
-			Expect(componentMap["pod-1"].Hashes).To(BeEmpty())
+				// ✅ Ensure no licenses/hashes exist since they were not set in mock data
+				Expect(componentMap["pod-1"].Licenses).To(BeEmpty())
+				Expect(componentMap["pod-1"].Hashes).To(BeEmpty())
 
-			// Make sure that there are no services components - we didn't give any mock data for them.
-			for _, comp := range components {
-				kind, found := comp.GetProperty("clx:k8s:componentKind")
-				Expect(found && kind == "Services").ToNot(BeTrue(), "Expected not to find a 'Service', but found one")
-			}
-		})
+				// Make sure that there are no services components - we didn't give any mock data for them.
+				for _, comp := range components {
+					kind, found := comp.GetProperty(model.ComponentKind)
+					Expect(found && kind == "Services").ToNot(BeTrue(), "Expected not to find a 'Service', but found one")
+				}
+			},
+			Entry("No Namespaces", []string{}, 7, true),
+			Entry("Specific Test Namespaces", mockNamespaceList, 7, true),
+			Entry("Specific Test Namespace", []string{"default"}, 5, false),
+		)
 	})
 
 	Context("when GetAllImages is called with a K8s client", func() {
@@ -368,7 +396,7 @@ var _ = Describe("Kubernetes", Label("unit"), func() {
 			Expect(componentMap["index.docker.io/library/busybox:debug"].PackageURL).To(Equal("pkg:oci/library/busybox?repository_url=index.docker.io%2Flibrary%2Fbusybox&version=debug"))
 			Expect(componentMap["index.docker.io/library/nginx:latest"].PackageURL).To(Equal("pkg:oci/library/nginx?repository_url=index.docker.io%2Flibrary%2Fnginx&version=latest"))
 			componentPointer := componentMap["index.docker.io/library/nginx:latest"]
-			property, found := componentPointer.GetPropertyObject("clx:k8s:namespace")
+			property, found := componentPointer.GetPropertyObject(model.ComponentNamespace)
 			Expect(found).To(Equal(true))
 			Expect(property).ToNot(BeNil())
 			Expect(len(property.Values)).To(Equal(2))
