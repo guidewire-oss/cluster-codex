@@ -1,7 +1,0 @@
-{
-  "inclusions": [
-    {
-      "namespace": "kube-system"
-    }
-  ]
-}
