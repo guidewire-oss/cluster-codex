@@ -51,7 +51,7 @@ type ContainerWrapper struct {
 	corev1.Container
 }
 
-var K8Filter *model.Inclusions
+var K8Filter = &model.Inclusions{Inclusions: []model.Inclusion{{Namespaces: []string{""}}}}
 
 func (c ContainerWrapper) GetName() string  { return c.Name }
 func (c ContainerWrapper) GetImage() string { return c.Image }
@@ -168,43 +168,36 @@ func (c *K8sClient) getResources(ctx context.Context, apiResourceLists []*metav1
 			}
 			// Handle pagination while fetching resources
 			var continueToken string
-			for {
-				listOptions := metav1.ListOptions{
-					Continue: continueToken, // Use pagination token if present
-				}
-
-				//k8sResources, k8serr := c.DynamicClient.Resource(gvr).List(ctx, listOptions)
-				k8sResources, k8serr := c.DynamicClient.Resource(gvr).Namespace(inc.Namespace).List(ctx, listOptions)
-				if k8serr != nil {
-					if _, exists := unnecessaryResources[gvr.Resource]; exists {
-						config.ClxLogger.Debug("Failed to list resources for", "resource", gvr.Resource, "error", k8serr)
-					} else {
-						config.ClxLogger.Warn("Failed to list resources for", "resource", gvr.Resource, "error", k8serr)
+			for _, namespace := range inc.Namespaces {
+				for {
+					listOptions := metav1.ListOptions{
+						Continue: continueToken, // Use pagination token if present
 					}
-					break
-				}
-				if k8sResources == nil || len(k8sResources.Items) == 0 {
-					config.ClxLogger.Info("No resources found for GVR", "gvr", gvr)
-					break
-				}
-				//for _, item := range k8sResources.Items {
-				//	// Apply Namespace inclusionFilter (if specified)
-				//	if len(inclusionFilter.Namespaces) > 0 {
-				//		namespace := item.GetNamespace()
-				//		if namespace != "" && !contains(inclusionFilter.Namespaces, namespace) {
-				//			continue
-				//		}
-				//	}
-				//	addToComponentList(item, &k8sResourceList)
-				//}
-				for _, item := range k8sResources.Items {
-					addToComponentList(item, k8sResourceList)
-				}
 
-				// Handle pagination
-				continueToken = k8sResources.GetContinue()
-				if continueToken == "" {
-					break
+					//k8sResources, k8serr := c.DynamicClient.Resource(gvr).List(ctx, listOptions)
+					k8sResources, k8serr := c.DynamicClient.Resource(gvr).Namespace(namespace).List(ctx, listOptions)
+					if k8serr != nil {
+						if _, exists := unnecessaryResources[gvr.Resource]; exists {
+							config.ClxLogger.Debug("Failed to list resources for", "resource", gvr.Resource, "error", k8serr)
+						} else {
+							config.ClxLogger.Warn("Failed to list resources for", "resource", gvr.Resource, "error", k8serr)
+						}
+						break
+					}
+					if k8sResources == nil || len(k8sResources.Items) == 0 {
+						config.ClxLogger.Info("No resources found for GVR", "gvr", gvr)
+						break
+					}
+
+					for _, item := range k8sResources.Items {
+						addToComponentList(item, k8sResourceList)
+					}
+
+					// Handle pagination
+					continueToken = k8sResources.GetContinue()
+					if continueToken == "" {
+						break
+					}
 				}
 			}
 		}

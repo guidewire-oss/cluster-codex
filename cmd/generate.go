@@ -32,12 +32,10 @@ var GenerateCmd = &cobra.Command{
 	RunE:  runGenerate,
 }
 
-const defaultFilterFileName = "./filters.json"
-
 func init() {
 	GenerateCmd.Flags().StringVarP(&format, "format", "f", "cyclonedx-json", "Format of the generated BOM.")
 	GenerateCmd.Flags().StringVarP(&outPath, "out-path", "o", "./output.json", "Path and filename of generated cluster codex file.")
-	GenerateCmd.Flags().StringVarP(&filters, "filters", "i", "", "Path to a json file containing inclusion filters. (default file name: filters.json)")
+	GenerateCmd.Flags().StringVarP(&filters, "filters", "i", "", "Path to a json file containing inclusion filters.")
 	GenerateCmd.Flags().BoolVarP(&sort, "sort", "s", false, "Sort the generated BOM JSON in Application, Kind, Name, Namespace order")
 }
 
@@ -160,15 +158,13 @@ func ValidatePath(filePath string) error {
 }
 
 func getInclusionFilter() error {
-	k8.K8Filter = &model.Inclusions{Inclusions: []model.Inclusion{}}
+	//k8.K8Filter = &model.Inclusions{Inclusions: []model.Inclusion{{Namespaces: []string{""}}}}
+
 	if filters != "" {
 		// Check if file exists
 		if _, err := os.Stat(filters); os.IsNotExist(err) {
-			if filters == defaultFilterFileName {
-				config.ClxLogger.Debug("Default filter file did not exist.")
-				return nil
-			}
-			return fmt.Errorf("file does not exist: %s", filters)
+			config.ClxLogger.Error("file does not exist: %s", filters)
+			log.Fatalf("file does not exist: %s", err)
 		}
 
 		// Read file contents
@@ -191,7 +187,24 @@ func getInclusionFilter() error {
 			}
 		}
 
-		k8.K8Filter = &inc
+		setFilter := true
+		// The below logic is to detect
+		// * if the namespace is "*" and the corresponding resource array is empty considered for all resources for all namespaces.
+		// * if the namespace is "*" and the corresponding resource array is NOT empty the namespace or that inclusion set to "*" which means query the specific resources in all namespaces
+		for idx, inclusion := range inc.Inclusions {
+			for j, _ := range inclusion.Namespaces {
+				if inc.Inclusions[idx].Namespaces[j] == "*" {
+					inc.Inclusions[idx].Namespaces = []string{"*"}
+					if len(inc.Inclusions[idx].Resources) == 0 {
+						setFilter = false
+					}
+					break
+				}
+			}
+		}
+		if setFilter {
+			k8.K8Filter = &inc
+		}
 	}
 	return nil
 }
@@ -200,7 +213,7 @@ func getNamespaceList() []string {
 
 	var namespaces []string
 	for _, inclusion := range k8.K8Filter.Inclusions {
-		namespaces = append(namespaces, inclusion.Namespace)
+		namespaces = append(namespaces, inclusion.Namespaces...)
 	}
 	return namespaces
 }

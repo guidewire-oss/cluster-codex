@@ -97,8 +97,8 @@ type Component struct {
 
 // Inclusion - Struct to match JSON structure
 type Inclusion struct {
-	Namespace string   `json:"namespace"`
-	Resources []string `json:"resources"`
+	Namespaces []string `json:"namespaces"`
+	Resources  []string `json:"resources"`
 }
 
 type Inclusions struct {
