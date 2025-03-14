@@ -76,35 +76,37 @@ func runGenerate(cmd *cobra.Command, _ []string) error {
 		bom.Sort()
 	}
 
-	// Output the BOM as JSON
-	jsonData, err := prettyjson.MarshalIndent(bom, "", "  ")
+	err = writeJson(bom)
 	if err != nil {
-		config.ClxLogger.Error("Got error converting output BOM to json %v", "error", err)
-		os.Exit(1)
-	}
-
-	// Create a file and write the json
-	err = ValidatePath(outPath)
-	if err != nil {
-		config.ClxLogger.Error("Error validating path: %v", "error", err)
-	}
-	file, err := os.Create(outPath)
-	if err != nil {
-		config.ClxLogger.Error("Error creating file %s: %v\n", outPath, err)
-		os.Exit(1)
-	}
-	defer file.Close()
-
-	// Write JSON data to the file
-	_, err = file.Write(jsonData)
-	if err != nil {
-		fmt.Printf("Error writing to file %s: %v\n", outPath, err)
 		return err
 	}
+
 	elapsed := time.Since(start)
 	rounded := elapsed.Round(time.Second)
 	seconds := int64(rounded / time.Second)
 	fmt.Printf("Generate command output written to file %s in %d seconds\n", outPath, seconds)
+	return err
+}
+
+func writeJson(bom *model.BOM) error {
+	err := ValidatePath(outPath)
+	if err != nil {
+		log.Fatalf("Error validating path: %v", err)
+	}
+	file, err := os.Create(outPath)
+	if err != nil {
+		fmt.Printf("Error creating file %s: %v\n", outPath, err)
+		return err
+	}
+	defer file.Close()
+
+	encoder := prettyjson.NewEncoder(file)
+	encoder.SetEscapeHTML(false)
+	encoder.SetIndent("", "  ") // Equivalent to MarshalIndent
+
+	if err := encoder.Encode(bom); err != nil {
+		log.Fatalf("Got error converting to json %v", err)
+	}
 	return err
 }
 

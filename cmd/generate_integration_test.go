@@ -35,7 +35,9 @@ var _ = Describe("GenerateBOM - Integration", Label("integration"), func() {
 				// If we filter out the testNamespace, we will not capture any Deployments in it.
 				components := bom.FindApplications("nginx-deployment", "Deployment", testNamespace)
 				Expect(len(components)).To(BeNumerically("==", map[bool]int{true: 1, false: 0}[findNamespace]))
-
+				if len(components) > 0 {
+					Expect(components[0].PackageURL).To(Equal("pkg:k8s/Deployment/nginx-deployment?apiVersion=apps%2Fv1&namespace=clx-test"))
+				}
 				// Even when we are filtering out the test namespace, it will be in the BOM since it is not in a namespace.
 				components = bom.FindApplications(testNamespace, "Namespace", "")
 				Expect(len(components)).To(BeNumerically("==", 1))
@@ -51,6 +53,9 @@ var _ = Describe("GenerateBOM - Integration", Label("integration"), func() {
 					ownerRef, found := images[0].GetProperty("clx:k8s:ownerRef")
 					Expect(found).To(BeTrue())
 					Expect(ownerRef).To(Equal("Deployment/nginx-deployment"))
+					//Image sha will be different for multi-arch images so checking substring
+					Expect(images[0].PackageURL).To(ContainSubstring("pkg:oci/library/nginx@sha256:"))
+					Expect(images[0].PackageURL).To(ContainSubstring("?repository_url=index.docker.io%2Flibrary%2Fnginx&version=1.27.4"))
 				} else {
 					Expect(len(images)).To(BeNumerically("==", 0))
 				}

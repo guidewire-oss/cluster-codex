@@ -398,9 +398,23 @@ func addToComponentList(item unstructured.Unstructured, k8sResourceList *[]model
 	component.AddProperty(model.ComponentKind, item.GetKind())
 	component.AddProperty(model.ComponentNamespace, item.GetNamespace())
 	addVersionForComponent(item, &component, "clx:k8s:componentVersion")
-
+	component.PackageURL = GetAppPkgId(item.GetKind(), item.GetName(), item.GetNamespace(), item.GetAPIVersion())
 	*k8sResourceList = append(*k8sResourceList, component)
 	config.ClxLogger.Debug("Created new component for resource:", "name", item.GetName(), "kind", item.GetKind(), "namespace", item.GetNamespace())
+}
+
+func GetAppPkgId(kind string, name string, namespace string, apiVersion string) string {
+	baseUrl := fmt.Sprintf("%s:%s/%s/%s", model.PkgPrefix, model.K8sPrefix, kind, name)
+	urlValues := url.Values{
+		"apiVersion": []string{apiVersion},
+	}
+	// Some resources don't have a namespace, only add to the purl if namespace exists
+	if namespace != "" {
+		urlValues.Add("namespace", namespace)
+	}
+
+	//Format:  pkg:kubernetes/{kind}/{name}?apiVersion={apiVersion}&namespace={namespace}
+	return fmt.Sprintf("%s?%s", baseUrl, urlValues.Encode())
 }
 
 func addVersionForComponent(item unstructured.Unstructured, component *model.Component, key string) {
@@ -460,5 +474,7 @@ func PkgID(componentName string, imageVersion string, imageSha string, baseUrl s
 	if imageSha != "" {
 		baseName = fmt.Sprintf("%s@%s", baseName, imageSha)
 	}
+
+	//Format:  pkg:oci/{imageName}/{@ImageSha}?repository_url={repourl}&version={version}
 	return fmt.Sprintf("%s?%s", baseName, urlValues.Encode())
 }
