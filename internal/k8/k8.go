@@ -354,9 +354,22 @@ func addToComponentList(item unstructured.Unstructured, k8sResourceList *[]model
 	component.AddProperty("clx:k8s:componentKind", item.GetKind())
 	component.AddProperty("clx:k8s:namespace", item.GetNamespace())
 	addVersionForComponent(item, &component, "clx:k8s:componentVersion")
-
+	component.PackageURL = GetAppPkgId(item.GetKind(), item.GetName(), item.GetNamespace(), item.GetAPIVersion())
 	*k8sResourceList = append(*k8sResourceList, component)
 	config.ClxLogger.Debug("Created new component for resource:", "name", item.GetName(), "kind", item.GetKind(), "namespace", item.GetNamespace())
+}
+
+func GetAppPkgId(kind string, name string, namespace string, apiVersion string) string {
+	baseUrl := fmt.Sprintf("%s:%s/%s/%s", model.PkgPrefix, model.K8sPrefix, kind, name)
+	urlValues := url.Values{
+		"apiVersion": []string{apiVersion},
+	}
+	// Some resources don't have a namespace, only add to the purl if namespace exists
+	if namespace != "" {
+		urlValues.Add("namespace", namespace)
+	}
+
+	return fmt.Sprintf("%s?%s", baseUrl, urlValues.Encode())
 }
 
 func addVersionForComponent(item unstructured.Unstructured, component *model.Component, key string) {

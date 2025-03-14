@@ -4,6 +4,7 @@ import (
 	"cluster-codex/internal/k8"
 	"cluster-codex/internal/model"
 	"context"
+	"fmt"
 	. "github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 	. "github.com/onsi/gomega"
@@ -26,6 +27,13 @@ var gvrs = map[string]schema.GroupVersionResource{
 	"namespaces":  {Group: "", Version: "v1", Resource: "namespaces"},
 }
 
+var kinds = map[string]string{
+	"pods":        "Pod",
+	"services":    "Service",
+	"deployments": "Deployment",
+	"namespaces":  "Namespace",
+}
+
 // ✅ Generates mock Kubernetes resources dynamically
 func createMockResources(resourceType string, names []string, namespace string) []unstructured.Unstructured {
 	var resources []unstructured.Unstructured
@@ -39,7 +47,7 @@ func createMockResources(resourceType string, names []string, namespace string) 
 		obj := unstructured.Unstructured{
 			Object: map[string]interface{}{
 				"apiVersion": apiVersion,
-				"kind":       capitalize(resourceType), // Auto capitalize kind (e.g., Pod, Deployment)
+				"kind":       kinds[resourceType], // Get corresponding kind for a resource name (e.g., pods -> Pod, deployments -> Deployment)
 				"metadata": map[string]interface{}{
 					"name": name,
 				},
@@ -291,10 +299,11 @@ var _ = Describe("Kubernetes", Label("unit"), func() {
 			Expect(componentMap["pod-1"].Type).To(Equal("application"))
 			Expect(componentMap["pod-1"].Name).To(Equal("pod-1"))
 			Expect(componentMap["pod-1"].Version).To(Equal("v1")) // No version for pods
-			Expect(componentMap["pod-1"].PackageURL).To(BeEmpty())
+			Expect(componentMap["pod-1"].PackageURL).To(Equal(fmt.Sprintf("%s:%s/Pod/pod-1?apiVersion=v1&namespace=default", model.PkgPrefix, model.K8sPrefix)))
 
 			Expect(componentMap["deployment-1"].Type).To(Equal("application"))
 			Expect(componentMap["deployment-1"].Name).To(Equal("deployment-1"))
+			Expect(componentMap["deployment-1"].PackageURL).To(Equal(fmt.Sprintf("%s:%s/Deployment/deployment-1?apiVersion=apps%%2Fv1&namespace=default", model.PkgPrefix, model.K8sPrefix)))
 
 			// ✅ Check for namespace handling
 			Expect(componentMap["default"].Type).To(Equal("application"))
@@ -302,30 +311,30 @@ var _ = Describe("Kubernetes", Label("unit"), func() {
 
 			// ✅ Check properties for Pods (Namespace & Kind)
 			Expect(componentMap["pod-1"].Properties).To(ContainElements(
-				model.Property{Name: "clx:k8s:componentKind", Values: []string{"Pods"}},
+				model.Property{Name: "clx:k8s:componentKind", Values: []string{"Pod"}},
 				model.Property{Name: "clx:k8s:namespace", Values: []string{"default"}},
 			))
 			Expect(componentMap["pod-2"].Properties).To(ContainElements(
-				model.Property{Name: "clx:k8s:componentKind", Values: []string{"Pods"}},
+				model.Property{Name: "clx:k8s:componentKind", Values: []string{"Pod"}},
 				model.Property{Name: "clx:k8s:namespace", Values: []string{"default"}},
 			))
 
 			// ✅ Check properties for Deployments (Namespace & Kind)
 			Expect(componentMap["deployment-1"].Properties).To(ContainElements(
-				model.Property{Name: "clx:k8s:componentKind", Values: []string{"Deployments"}},
+				model.Property{Name: "clx:k8s:componentKind", Values: []string{"Deployment"}},
 				model.Property{Name: "clx:k8s:namespace", Values: []string{"default"}},
 			))
 
 			// ✅ Check properties for Namespaces (They should NOT have a "clx:k8s:namespace" property)
 			Expect(componentMap["default"].Properties).To(ContainElement(
-				model.Property{Name: "clx:k8s:componentKind", Values: []string{"Namespaces"}},
+				model.Property{Name: "clx:k8s:componentKind", Values: []string{"Namespace"}},
 			))
 			Expect(componentMap["default"].Properties).ToNot(ContainElement(
 				model.Property{Name: "clx:k8s:namespace", Values: []string{"default"}}, // Namespaces shouldn't have this property
 			))
 
 			Expect(componentMap["kube-system"].Properties).To(ContainElement(
-				model.Property{Name: "clx:k8s:componentKind", Values: []string{"Namespaces"}},
+				model.Property{Name: "clx:k8s:componentKind", Values: []string{"Namespace"}},
 			))
 			Expect(componentMap["kube-system"].Properties).ToNot(ContainElement(
 				model.Property{Name: "clx:k8s:namespace", Values: []string{"kube-system"}},
@@ -376,6 +385,32 @@ var _ = Describe("Kubernetes", Label("unit"), func() {
 		})
 	})
 
+})
+
+var _ = Describe("GetAppPkgId", Label("unit"), func() {
+	It("should generate the correct URL when namespace is provided", func() {
+		result := k8.GetAppPkgId("deployment", "my-app", "default", "apps/v1")
+		expected := fmt.Sprintf("%s:%s/deployment/my-app?apiVersion=apps%%2Fv1&namespace=default", model.PkgPrefix, model.K8sPrefix)
+		Expect(result).To(Equal(expected))
+	})
+
+	It("should generate the correct URL when namespace is empty", func() {
+		result := k8.GetAppPkgId("service", "my-service", "", "v1")
+		expected := fmt.Sprintf("%s:%s/service/my-service?apiVersion=v1", model.PkgPrefix, model.K8sPrefix)
+		Expect(result).To(Equal(expected))
+	})
+
+	It("should correctly encode special characters in apiVersion", func() {
+		result := k8.GetAppPkgId("APIService", "v1beta1.metrics.k8s.io", "test", "apiregistration.k8s.io/v1")
+		expected := fmt.Sprintf("%s:%s/APIService/v1beta1.metrics.k8s.io?apiVersion=apiregistration.k8s.io%%2Fv1&namespace=test", model.PkgPrefix, model.K8sPrefix)
+		Expect(result).To(Equal(expected))
+	})
+
+	It("should correctly encode special characters in namespace", func() {
+		result := k8.GetAppPkgId("configmap", "my-config", "kube-system", "v1")
+		expected := fmt.Sprintf("%s:%s/configmap/my-config?apiVersion=v1&namespace=kube-system", model.PkgPrefix, model.K8sPrefix)
+		Expect(result).To(Equal(expected))
+	})
 })
 
 // ✅ Helper function to capitalize resource type (e.g., "pods" → "Pod")

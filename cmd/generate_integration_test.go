@@ -31,6 +31,7 @@ var _ = Describe("GenerateBOM - Integration", Label("integration"), func() {
 
 			components := bom.FindApplications("nginx-deployment", "Deployment", "test")
 			Expect(len(components)).To(BeNumerically("==", 1))
+			Expect(components[0].PackageURL).To(Equal("pkg:k8s/Deployment/nginx-deployment?apiVersion=apps%2Fv1&namespace=test"))
 
 			components = bom.FindApplications("test", "Namespace", "")
 			Expect(len(components)).To(BeNumerically("==", 1))
