@@ -23,6 +23,14 @@ import (
 	"strings"
 )
 
+type ContextKey string
+
+const FilterKey ContextKey = "k8sFilter"
+
+type K8sFilter struct {
+	Namespaces []string
+}
+
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . K8sClientInterface
 type K8sClientInterface interface {
 	GetAllComponents(ctx context.Context) ([]model.Component, error)
@@ -122,6 +130,12 @@ func GetClient() (*K8sClient, error) {
 }
 
 func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, error) {
+	// Retrieve the inclusionFilter from context (if provided)
+	var inclusionFilter K8sFilter
+	if val, ok := ctx.Value(FilterKey).(K8sFilter); ok {
+		inclusionFilter = val
+	}
+
 	// Get all API resources
 	apiResourceLists, err := c.Discovery.ServerPreferredResources()
 	if err != nil {
@@ -143,26 +157,56 @@ func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, er
 				Version:  gv.Version,
 				Resource: resource.Name,
 			}
-			k8sResources, k8serr := c.DynamicClient.Resource(gvr).List(ctx, metav1.ListOptions{})
-			if k8serr != nil {
-				if _, exists := unnecessaryResources[gvr.Resource]; exists {
-					config.ClxLogger.Debug("Failed to list resources for", "resource", gvr.Resource, "error", k8serr)
-				} else {
-					config.ClxLogger.Warn("Failed to list resources for", "resource", gvr.Resource, "error", k8serr)
+			// Handle pagination while fetching resources
+			var continueToken string
+			for {
+				listOptions := metav1.ListOptions{
+					Continue: continueToken, // Use pagination token if present
 				}
-				continue
-			}
-			if k8sResources == nil || len(k8sResources.Items) == 0 {
-				config.ClxLogger.Info("No resources found for GVR", "gvr", gvr)
-				continue
-			}
-			for _, item := range k8sResources.Items {
-				addToComponentList(item, &k8sResourceList)
+
+				k8sResources, k8serr := c.DynamicClient.Resource(gvr).List(ctx, listOptions)
+				if k8serr != nil {
+					if _, exists := unnecessaryResources[gvr.Resource]; exists {
+						config.ClxLogger.Debug("Failed to list resources for", "resource", gvr.Resource, "error", k8serr)
+					} else {
+						config.ClxLogger.Warn("Failed to list resources for", "resource", gvr.Resource, "error", k8serr)
+					}
+					break
+				}
+				if k8sResources == nil || len(k8sResources.Items) == 0 {
+					config.ClxLogger.Info("No resources found for GVR", "gvr", gvr)
+					break
+				}
+				for _, item := range k8sResources.Items {
+					// Apply Namespace inclusionFilter (if specified)
+					if len(inclusionFilter.Namespaces) > 0 {
+						namespace := item.GetNamespace()
+						if namespace != "" && !contains(inclusionFilter.Namespaces, namespace) {
+							continue
+						}
+					}
+					addToComponentList(item, &k8sResourceList)
+				}
+
+				// Handle pagination
+				continueToken = k8sResources.GetContinue()
+				if continueToken == "" {
+					break
+				}
 			}
 		}
 	}
 
 	return k8sResourceList, nil
+}
+
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
 }
 
 func (c *K8sClient) GetAllImages(ctx context.Context, namespaceList []string) ([]model.Component, error) {
@@ -268,7 +312,7 @@ func getPrimaryOwnerReference(k *K8sClient, ownerRefs []metav1.OwnerReference, o
 }
 
 func updateImageInComponentList(namespace string, component *model.Component) {
-	prop, exists := component.GetPropertyObject("clx:k8s:namespace")
+	prop, exists := component.GetPropertyObject(model.ComponentNamespace)
 	if exists {
 		prop.InsertValue(namespace)
 	} else {
@@ -303,8 +347,8 @@ func addImageToComponentList(container ContainerLike, namespace string, k8sResou
 		Hashes:     nil,
 	}
 
-	component.AddProperty("clx:k8s:componentKind", "Image")
-	component.AddProperty("clx:k8s:namespace", namespace)
+	component.AddProperty(model.ComponentKind, "Image")
+	component.AddProperty(model.ComponentNamespace, namespace)
 	component.AddProperty("clx:k8s:source", source)
 	if ownerRefs.Len() > 0 {
 		vals := mapToVariadicString(ownerRefs)
@@ -351,8 +395,8 @@ func addToComponentList(item unstructured.Unstructured, k8sResourceList *[]model
 		Hashes:     nil,
 	}
 
-	component.AddProperty("clx:k8s:componentKind", item.GetKind())
-	component.AddProperty("clx:k8s:namespace", item.GetNamespace())
+	component.AddProperty(model.ComponentKind, item.GetKind())
+	component.AddProperty(model.ComponentNamespace, item.GetNamespace())
 	addVersionForComponent(item, &component, "clx:k8s:componentVersion")
 
 	*k8sResourceList = append(*k8sResourceList, component)

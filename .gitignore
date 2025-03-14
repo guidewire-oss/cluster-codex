@@ -38,7 +38,6 @@ profile.cov
 classes/
 out/
 bin/
-output.json
 
 ######################
 # Visual Studio Code
@@ -55,3 +54,9 @@ output.json
 ######################
 # Windows image file caches
 Thumbs.db
+
+######################
+# Cluster Codex Files
+######################
+filter*.json
+output*.json

@@ -1,0 +1,10 @@
+{
+  "inclusions": [
+    {
+      "namespace": "namespace-one"
+    },
+    {
+      "namespace": "namespace-two"
+    }
+  ]
+}

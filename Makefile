@@ -6,7 +6,7 @@ GOBASE=$(shell pwd)
 GOBIN=$(GOBASE)/bin
 GOPKG=$(GOBASE)
 # You can use boolean logic in the LABEL_FILTER, eg export LABEL_FILTER="integration || unit"
-export LABEL_FILTER ?= 'unit'
+export LABEL_FILTER ?= unit
 
 # Go build and run commands
 .PHONY: all build run clean format test unit-test integration-test setup-test-data teardown-test-data
@@ -46,15 +46,17 @@ test:
 	@echo "🧪 Running All Tests with labels \"$(LABEL_FILTER)\"..."
 	ginkgo -r -p --label-filter="$(LABEL_FILTER)" --succinct --randomize-all
 
+# Use this target in the workflow since it handles setting up and tearing down the test data.
 int-test:
 	@echo "🧪 Running Integration Tests..."
 	ginkgo -r -p --label-filter=integration --succinct --randomize-all
 
-integration-test: setup-test-data int-test teardown-test-data
+# Use this target when running locally.
+integration-test: setup-test-data
+	# Ensure that the test data is torn down locally when there is a test failure
+	@$(MAKE) int-test || true
+	@$(MAKE) teardown-test-data
 
 release:
 	@echo "🚀 Releasing..."
 	goreleaser release --verbose --clean --timeout 90m
-
-
-

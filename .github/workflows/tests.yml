@@ -37,8 +37,12 @@ jobs:
       - name: 'Build and Test - Integration'
         env:
           TEST_FLAGS: '-v'
-        run: make integration-test
+        run: make int-test
 
       - name: 'Clean up Kubernetes Test Data'
         if: always() # Ensures it runs even if tests fail
         run: make teardown-test-data
+
+      - name: 'Teardown cluster'
+        if: always() # Ensures cleanup even on failure
+        run: kind delete cluster

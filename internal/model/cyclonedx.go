@@ -14,6 +14,10 @@ type CustomTime time.Time
 // RFC 3339 format without milliseconds
 const timeFormat = "2006-01-02T15:04:05Z07:00"
 
+const ComponentKind = "clx:k8s:componentKind"
+const ComponentNamespace = "clx:k8s:componentNamespace"
+const ComponentVersion = "clx:k8s:version"
+
 // MarshalJSON formats time correctly
 func (ct *CustomTime) MarshalJSON() ([]byte, error) {
 	formatted := fmt.Sprintf("\"%s\"", time.Time(*ct).Format(timeFormat))
@@ -135,6 +139,60 @@ func (component *Component) GetProperty(name string) (string, bool) {
 	return "", false
 }
 
+func (component *Component) GetKind() string {
+	value, found := component.GetProperty(ComponentKind)
+	if found {
+		return value
+	}
+	return ""
+}
+
+func (component *Component) GetNamespace() string {
+	value, found := component.GetProperty(ComponentNamespace)
+	if found {
+		return value
+	}
+	return ""
+}
+
+// ByComponentSorting Sorting implementation for Components
+type ByComponentSorting []Component
+
+func (c ByComponentSorting) Len() int { return len(c) }
+func (c ByComponentSorting) Less(i, j int) bool {
+	// 1️⃣ Sort by Type: "application" < "container"
+	typeOrder := map[string]int{"application": 0, "container": 1}
+	ti, tj := typeOrder[c[i].Type], typeOrder[c[j].Type]
+	if ti != tj {
+		return ti < tj
+	}
+
+	// 2️⃣ Sort by `clx:k8s:componentKind`
+	kindI, kindJ := c[i].GetKind(), c[j].GetKind()
+	if kindI != kindJ {
+		return kindI < kindJ
+	}
+
+	// 3️⃣ Sort by Name
+	if c[i].Name != c[j].Name {
+		return c[i].Name < c[j].Name
+	}
+	// 4️⃣ Sort by Namespace
+	return c[i].GetNamespace() < c[j].GetNamespace()
+}
+
+func (c ByComponentSorting) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
+
+func (bom *BOM) Sort() {
+	// Sort the components
+	sort.Sort(ByComponentSorting(bom.Components))
+
+	// Sort the properties in each component by name
+	for i := range bom.Components {
+		sort.Sort(ByPropertyName(bom.Components[i].Properties))
+	}
+}
+
 func (bom *BOM) FindApplications(name string, kind string, namespace string) []Component {
 	return bom.findComponents("application", name, kind, namespace)
 }
@@ -148,10 +206,10 @@ func (bom *BOM) findComponents(componentType string, name string, kind string, n
 	for _, component := range bom.Components {
 		if componentType == "" || component.Type == componentType {
 			if name == "" || component.Name == name {
-				props, found := component.GetProperty("clx:k8s:componentKind")
+				props, found := component.GetProperty(ComponentKind)
 				if found && props == kind {
 					if namespace != "" {
-						props, found := component.GetProperty("clx:k8s:namespace")
+						props, found := component.GetProperty(ComponentNamespace)
 						if found && props == namespace {
 							returnComponents = append(returnComponents, component)
 						}
@@ -177,10 +235,10 @@ func (bom *BOM) findComponentsByKind(componentType string, kind string, namespac
 	var returnComponents []Component = make([]Component, 0)
 	for _, component := range bom.Components {
 		if componentType == "" || component.Type == componentType {
-			props, found := component.GetProperty("clx:k8s:componentKind")
+			props, found := component.GetProperty(ComponentKind)
 			if found && props == kind {
 				if namespace != "" {
-					props, found := component.GetProperty("clx:k8s:namespace")
+					props, found := component.GetProperty(ComponentNamespace)
 					if found && props == namespace {
 						returnComponents = append(returnComponents, component)
 					}
@@ -237,6 +295,13 @@ type Property struct {
 	Name   string   `json:"name"`
 	Values []string `json:"value"` // Use "value" in JSON for both single and multiple values
 }
+
+// ByPropertyName Sorting implementation for Properties (by Name)
+type ByPropertyName []Property
+
+func (p ByPropertyName) Len() int           { return len(p) }
+func (p ByPropertyName) Less(i, j int) bool { return p[i].Name < p[j].Name } // Sort ascending
+func (p ByPropertyName) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 func (p *Property) InsertValue(values ...string) {
 	sort.Strings(values)

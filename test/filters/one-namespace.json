@@ -1,0 +1,7 @@
+{
+  "inclusions": [
+    {
+      "namespace": "kube-system"
+    }
+  ]
+}

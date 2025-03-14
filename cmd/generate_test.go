@@ -62,9 +62,9 @@ var _ = Describe("GenerateBOM - Unit", Label("unit"), func() {
 				Version:    "1.0.0",
 				PackageURL: "pkg:docker/test-component@1.0.0", // Optional (omit if not needed)
 				Properties: []model.Property{
-					{Name: "clx:k8s:componentKind", Values: []string{"HelmChart"}},
-					{Name: "clx:k8s:namespace", Values: []string{"flux-system"}},
-					{Name: "clx:k8s:componentVersion", Values: []string{"1.0.0"}},
+					{Name: model.ComponentKind, Values: []string{"HelmChart"}},
+					{Name: model.ComponentNamespace, Values: []string{"flux-system"}},
+					{Name: model.ComponentVersion, Values: []string{"1.0.0"}},
 				},
 			}
 			mockResponse := []model.Component{mockComponent}
@@ -72,7 +72,7 @@ var _ = Describe("GenerateBOM - Unit", Label("unit"), func() {
 				return mockResponse, nil
 			}
 
-			bom := GenerateBOM(fakeK8sClient)
+			bom := GenerateBOM(fakeK8sClient, []string{})
 
 			Expect(bom).ToNot(BeNil())
 			Expect(bom.Components).To(HaveLen(1))
@@ -86,7 +86,7 @@ var _ = Describe("GenerateBOM - Unit", Label("unit"), func() {
 				return nil, assert.AnError
 			}
 
-			bom := GenerateBOM(fakeK8sClient)
+			bom := GenerateBOM(fakeK8sClient, []string{})
 
 			Expect(bom).To(BeNil())
 		})
