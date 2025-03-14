@@ -9,6 +9,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
+	"io/ioutil"
+	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/apimachinery/pkg/version"
 	"log"
 	"os"
@@ -35,7 +37,7 @@ const defaultFilterFileName = "./filters.json"
 func init() {
 	GenerateCmd.Flags().StringVarP(&format, "format", "f", "cyclonedx-json", "Format of the generated BOM.")
 	GenerateCmd.Flags().StringVarP(&outPath, "out-path", "o", "./output.json", "Path and filename of generated cluster codex file.")
-	GenerateCmd.Flags().StringVarP(&filters, "filters", "i", defaultFilterFileName, "Path to a json file containing inclusion filters.")
+	GenerateCmd.Flags().StringVarP(&filters, "filters", "i", "", "Path to a json file containing inclusion filters. (default file name: filters.json)")
 	GenerateCmd.Flags().BoolVarP(&sort, "sort", "s", false, "Sort the generated BOM JSON in Application, Kind, Name, Namespace order")
 }
 
@@ -44,9 +46,8 @@ func runGenerate(cmd *cobra.Command, _ []string) error {
 	start := time.Now()
 
 	// Read filter file, if any.
-	var namespaces []string
 	var err error
-	namespaces, err = GetNamespacesFromJSON(filters)
+	err = getInclusionFilter()
 	if err != nil {
 		//config.ClxLogger.Error("Error loading filter file", "error", err)
 		//os.Exit(1)
@@ -69,7 +70,7 @@ func runGenerate(cmd *cobra.Command, _ []string) error {
 
 	config.ClxLogger.Info("Git:", "Version", serverVersion.String())
 
-	bom := GenerateBOM(k8sClient, namespaces)
+	bom := GenerateBOM(k8sClient)
 
 	// Sort the BOM so it is consistent
 	if sort {
@@ -110,18 +111,10 @@ func writeJson(bom *model.BOM) error {
 	return err
 }
 
-func GenerateBOM(k8client k8.K8sClientInterface, namespaces []string) *model.BOM {
+func GenerateBOM(k8client k8.K8sClientInterface) *model.BOM {
 
 	bom := model.NewBOM()
-
-	var ctx context.Context
-	if len(namespaces) > 0 {
-		ctx = context.WithValue(context.Background(), k8.FilterKey, k8.K8sFilter{
-			Namespaces: namespaces,
-		})
-	} else {
-		ctx = context.Background()
-	}
+	ctx := context.Background()
 
 	componentList, err := k8client.GetAllComponents(ctx)
 	if err != nil {
@@ -130,14 +123,9 @@ func GenerateBOM(k8client k8.K8sClientInterface, namespaces []string) *model.BOM
 	}
 	bom.Components = componentList
 
-	var namespaceList []string
-	// If we are filtering by namespace, only look for images in those namespaces
-	if len(namespaces) > 0 {
-		namespaceList = namespaces
-	} else {
-		// Otherwise look for images in all namespaces
+	namespaceList := getNamespaceList()
+	if len(namespaceList) <= 0 {
 		namespaceComponents := bom.FindApplicationsByKind("Namespace", "")
-
 		for _, component := range namespaceComponents {
 			namespaceList = append(namespaceList, component.Name)
 		}
@@ -169,4 +157,50 @@ func ValidatePath(filePath string) error {
 	}
 
 	return nil
+}
+
+func getInclusionFilter() error {
+	k8.K8Filter = &model.Inclusions{Inclusions: []model.Inclusion{}}
+	if filters != "" {
+		// Check if file exists
+		if _, err := os.Stat(filters); os.IsNotExist(err) {
+			if filters == defaultFilterFileName {
+				config.ClxLogger.Debug("Default filter file did not exist.")
+				return nil
+			}
+			return fmt.Errorf("file does not exist: %s", filters)
+		}
+
+		// Read file contents
+		data, err := ioutil.ReadFile(filters)
+		if err != nil {
+			return fmt.Errorf("failed to read file: %v", err)
+		}
+
+		// Parse JSON
+		var inc model.Inclusions
+		err = json.Unmarshal(data, &inc)
+		if err != nil {
+			return fmt.Errorf("failed to parse JSON: %v", err)
+		}
+
+		for idx, inclusion := range inc.Inclusions {
+			// Convert Resources to lowercase
+			for j, resource := range inclusion.Resources {
+				inc.Inclusions[idx].Resources[j] = strings.ToLower(resource)
+			}
+		}
+
+		k8.K8Filter = &inc
+	}
+	return nil
+}
+
+func getNamespaceList() []string {
+
+	var namespaces []string
+	for _, inclusion := range k8.K8Filter.Inclusions {
+		namespaces = append(namespaces, inclusion.Namespace)
+	}
+	return namespaces
 }

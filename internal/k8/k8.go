@@ -20,16 +20,9 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"slices"
 	"strings"
 )
-
-type ContextKey string
-
-const FilterKey ContextKey = "k8sFilter"
-
-type K8sFilter struct {
-	Namespaces []string
-}
 
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . K8sClientInterface
 type K8sClientInterface interface {
@@ -57,6 +50,8 @@ type ContainerLike interface {
 type ContainerWrapper struct {
 	corev1.Container
 }
+
+var K8Filter *model.Inclusions
 
 func (c ContainerWrapper) GetName() string  { return c.Name }
 func (c ContainerWrapper) GetImage() string { return c.Image }
@@ -131,10 +126,10 @@ func GetClient() (*K8sClient, error) {
 
 func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, error) {
 	// Retrieve the inclusionFilter from context (if provided)
-	var inclusionFilter K8sFilter
-	if val, ok := ctx.Value(FilterKey).(K8sFilter); ok {
-		inclusionFilter = val
-	}
+	//var inclusionFilter K8sFilter
+	//if val, ok := ctx.Value(FilterKey).(K8sFilter); ok {
+	//	inclusionFilter = val
+	//}
 
 	// Get all API resources
 	apiResourceLists, err := c.Discovery.ServerPreferredResources()
@@ -144,6 +139,17 @@ func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, er
 
 	var k8sResourceList []model.Component
 
+	if len(K8Filter.Inclusions) > 0 {
+		for _, inc := range K8Filter.Inclusions {
+			c.getResources(ctx, apiResourceLists, inc, &k8sResourceList)
+		}
+	} else {
+		c.getResources(ctx, apiResourceLists, model.Inclusion{}, &k8sResourceList)
+	}
+	return k8sResourceList, nil
+}
+
+func (c *K8sClient) getResources(ctx context.Context, apiResourceLists []*metav1.APIResourceList, inc model.Inclusion, k8sResourceList *[]model.Component) {
 	for _, resourceList := range apiResourceLists {
 		gv, err := schema.ParseGroupVersion(resourceList.GroupVersion)
 		if err != nil {
@@ -151,6 +157,9 @@ func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, er
 		}
 		// First, go through all the non namespaced resources, store them, and get the list of namespaces
 		for _, resource := range resourceList.APIResources {
+			if inc.Resources != nil && len(inc.Resources) > 0 && !slices.Contains(inc.Resources, strings.ToLower(resource.Kind)) {
+				continue
+			}
 			config.ClxLogger.Info("Processing resource", "resource", resource.Name)
 			gvr := schema.GroupVersionResource{
 				Group:    gv.Group,
@@ -164,7 +173,8 @@ func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, er
 					Continue: continueToken, // Use pagination token if present
 				}
 
-				k8sResources, k8serr := c.DynamicClient.Resource(gvr).List(ctx, listOptions)
+				//k8sResources, k8serr := c.DynamicClient.Resource(gvr).List(ctx, listOptions)
+				k8sResources, k8serr := c.DynamicClient.Resource(gvr).Namespace(inc.Namespace).List(ctx, listOptions)
 				if k8serr != nil {
 					if _, exists := unnecessaryResources[gvr.Resource]; exists {
 						config.ClxLogger.Debug("Failed to list resources for", "resource", gvr.Resource, "error", k8serr)
@@ -177,15 +187,18 @@ func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, er
 					config.ClxLogger.Info("No resources found for GVR", "gvr", gvr)
 					break
 				}
+				//for _, item := range k8sResources.Items {
+				//	// Apply Namespace inclusionFilter (if specified)
+				//	if len(inclusionFilter.Namespaces) > 0 {
+				//		namespace := item.GetNamespace()
+				//		if namespace != "" && !contains(inclusionFilter.Namespaces, namespace) {
+				//			continue
+				//		}
+				//	}
+				//	addToComponentList(item, &k8sResourceList)
+				//}
 				for _, item := range k8sResources.Items {
-					// Apply Namespace inclusionFilter (if specified)
-					if len(inclusionFilter.Namespaces) > 0 {
-						namespace := item.GetNamespace()
-						if namespace != "" && !contains(inclusionFilter.Namespaces, namespace) {
-							continue
-						}
-					}
-					addToComponentList(item, &k8sResourceList)
+					addToComponentList(item, k8sResourceList)
 				}
 
 				// Handle pagination
@@ -196,8 +209,6 @@ func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, er
 			}
 		}
 	}
-
-	return k8sResourceList, nil
 }
 
 func contains(slice []string, item string) bool {

@@ -95,6 +95,16 @@ type Component struct {
 	Hashes     []Hash     `json:"hashes,omitempty"`
 }
 
+// Inclusion - Struct to match JSON structure
+type Inclusion struct {
+	Namespace string   `json:"namespace"`
+	Resources []string `json:"resources"`
+}
+
+type Inclusions struct {
+	Inclusions []Inclusion `json:"inclusions"`
+}
+
 func (component *Component) AddProperty(key string, value string) {
 	existingProperty, found := component.GetPropertyObject(key)
 	if found {
