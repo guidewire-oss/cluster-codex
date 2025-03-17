@@ -15,7 +15,20 @@ make build
 ```
 
 ## Usage
+```shell
+clx - Kubernetes Bill of Materials
 
+Usage:
+  clx [command]
+
+Available Commands:
+  compare     Compare two Kubernetes BOM files against one another
+  completion  Generate the autocompletion script for the specified shell
+  generate    Generate Kubernetes BOM for the provided K8s cluster
+  help        Help about any command
+
+
+```
 `clx generate` generates a BOM file for your Kubernetes cluster.
 
 ```sh

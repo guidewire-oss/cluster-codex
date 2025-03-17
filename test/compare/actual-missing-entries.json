@@ -1,0 +1,2995 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "c24ee902-21dd-45db-b311-1699a62c2a54",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2025-03-24T13:29:57-07:00",
+    "tools": [
+      {
+        "vendor": "guidewire",
+        "name": "cluster codex",
+        "version": "v0.0.1"
+      }
+    ],
+    "component": {
+      "type": "platform",
+      "name": "kubernetes",
+      "version": ""
+    }
+  },
+  "components": [
+    {
+      "type": "application",
+      "name": "controller-manager",
+      "version": "v1",
+      "purl": "pkg:k8s/ComponentStatus/controller-manager?apiVersion=v1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ComponentStatus"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "scheduler",
+      "version": "v1",
+      "purl": "pkg:k8s/ComponentStatus/scheduler?apiVersion=v1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ComponentStatus"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "etcd-0",
+      "version": "v1",
+      "purl": "pkg:k8s/ComponentStatus/etcd-0?apiVersion=v1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ComponentStatus"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "clx-control-plane",
+      "version": "v1",
+      "purl": "pkg:k8s/Node/clx-control-plane?apiVersion=v1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "Node"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "clx-test",
+      "version": "v1",
+      "purl": "pkg:k8s/Namespace/clx-test?apiVersion=v1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "Namespace"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "default",
+      "version": "v1",
+      "purl": "pkg:k8s/Namespace/default?apiVersion=v1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "Namespace"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "kube-node-lease",
+      "version": "v1",
+      "purl": "pkg:k8s/Namespace/kube-node-lease?apiVersion=v1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "Namespace"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "kube-public",
+      "version": "v1",
+      "purl": "pkg:k8s/Namespace/kube-public?apiVersion=v1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "Namespace"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "kube-system",
+      "version": "v1",
+      "purl": "pkg:k8s/Namespace/kube-system?apiVersion=v1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "Namespace"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "local-path-storage",
+      "version": "v1",
+      "purl": "pkg:k8s/Namespace/local-path-storage?apiVersion=v1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "Namespace"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "v1.",
+      "version": "apiregistration.k8s.io/v1",
+      "purl": "pkg:k8s/APIService/v1.?apiVersion=apiregistration.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "APIService"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "v1.admissionregistration.k8s.io",
+      "version": "apiregistration.k8s.io/v1",
+      "purl": "pkg:k8s/APIService/v1.admissionregistration.k8s.io?apiVersion=apiregistration.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "APIService"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "v1.apiextensions.k8s.io",
+      "version": "apiregistration.k8s.io/v1",
+      "purl": "pkg:k8s/APIService/v1.apiextensions.k8s.io?apiVersion=apiregistration.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "APIService"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "v1.apps",
+      "version": "apiregistration.k8s.io/v1",
+      "purl": "pkg:k8s/APIService/v1.apps?apiVersion=apiregistration.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "APIService"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "v1.authentication.k8s.io",
+      "version": "apiregistration.k8s.io/v1",
+      "purl": "pkg:k8s/APIService/v1.authentication.k8s.io?apiVersion=apiregistration.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "APIService"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "v1.authorization.k8s.io",
+      "version": "apiregistration.k8s.io/v1",
+      "purl": "pkg:k8s/APIService/v1.authorization.k8s.io?apiVersion=apiregistration.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "APIService"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "v1.autoscaling",
+      "version": "apiregistration.k8s.io/v1",
+      "purl": "pkg:k8s/APIService/v1.autoscaling?apiVersion=apiregistration.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "APIService"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "v1.batch",
+      "version": "apiregistration.k8s.io/v1",
+      "purl": "pkg:k8s/APIService/v1.batch?apiVersion=apiregistration.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "APIService"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "v1.certificates.k8s.io",
+      "version": "apiregistration.k8s.io/v1",
+      "purl": "pkg:k8s/APIService/v1.certificates.k8s.io?apiVersion=apiregistration.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "APIService"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "v1.coordination.k8s.io",
+      "version": "apiregistration.k8s.io/v1",
+      "purl": "pkg:k8s/APIService/v1.coordination.k8s.io?apiVersion=apiregistration.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "APIService"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "v1.discovery.k8s.io",
+      "version": "apiregistration.k8s.io/v1",
+      "purl": "pkg:k8s/APIService/v1.discovery.k8s.io?apiVersion=apiregistration.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "APIService"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "v1.events.k8s.io",
+      "version": "apiregistration.k8s.io/v1",
+      "purl": "pkg:k8s/APIService/v1.events.k8s.io?apiVersion=apiregistration.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "APIService"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "v1.networking.k8s.io",
+      "version": "apiregistration.k8s.io/v1",
+      "purl": "pkg:k8s/APIService/v1.networking.k8s.io?apiVersion=apiregistration.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "APIService"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "v1.node.k8s.io",
+      "version": "apiregistration.k8s.io/v1",
+      "purl": "pkg:k8s/APIService/v1.node.k8s.io?apiVersion=apiregistration.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "APIService"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "v1.policy",
+      "version": "apiregistration.k8s.io/v1",
+      "purl": "pkg:k8s/APIService/v1.policy?apiVersion=apiregistration.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "APIService"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "v1.rbac.authorization.k8s.io",
+      "version": "apiregistration.k8s.io/v1",
+      "purl": "pkg:k8s/APIService/v1.rbac.authorization.k8s.io?apiVersion=apiregistration.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "APIService"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "v1.scheduling.k8s.io",
+      "version": "apiregistration.k8s.io/v1",
+      "purl": "pkg:k8s/APIService/v1.scheduling.k8s.io?apiVersion=apiregistration.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "APIService"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "v1.storage.k8s.io",
+      "version": "apiregistration.k8s.io/v1",
+      "purl": "pkg:k8s/APIService/v1.storage.k8s.io?apiVersion=apiregistration.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "APIService"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "v1beta2.flowcontrol.apiserver.k8s.io",
+      "version": "apiregistration.k8s.io/v1",
+      "purl": "pkg:k8s/APIService/v1beta2.flowcontrol.apiserver.k8s.io?apiVersion=apiregistration.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "APIService"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "v1beta3.flowcontrol.apiserver.k8s.io",
+      "version": "apiregistration.k8s.io/v1",
+      "purl": "pkg:k8s/APIService/v1beta3.flowcontrol.apiserver.k8s.io?apiVersion=apiregistration.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "APIService"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "v2.autoscaling",
+      "version": "apiregistration.k8s.io/v1",
+      "purl": "pkg:k8s/APIService/v2.autoscaling?apiVersion=apiregistration.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "APIService"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "cluster-admin",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/cluster-admin?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "kindnet",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/kindnet?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "kubeadm:get-nodes",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/kubeadm:get-nodes?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "kubeadm:kubelet-bootstrap",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/kubeadm:kubelet-bootstrap?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "kubeadm:node-autoapprove-bootstrap",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/kubeadm:node-autoapprove-bootstrap?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "kubeadm:node-autoapprove-certificate-rotation",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/kubeadm:node-autoapprove-certificate-rotation?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "kubeadm:node-proxier",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/kubeadm:node-proxier?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "local-path-provisioner-bind",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/local-path-provisioner-bind?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:basic-user",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:basic-user?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:attachdetach-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:attachdetach-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:certificate-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:certificate-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:clusterrole-aggregation-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:clusterrole-aggregation-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:cronjob-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:cronjob-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:daemon-set-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:daemon-set-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:deployment-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:deployment-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:disruption-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:disruption-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:endpoint-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:endpoint-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:endpointslice-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:endpointslice-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:endpointslicemirroring-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:endpointslicemirroring-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:ephemeral-volume-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:ephemeral-volume-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:expand-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:expand-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:generic-garbage-collector",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:generic-garbage-collector?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:horizontal-pod-autoscaler",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:horizontal-pod-autoscaler?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:job-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:job-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:namespace-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:namespace-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:node-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:node-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:persistent-volume-binder",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:persistent-volume-binder?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:pod-garbage-collector",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:pod-garbage-collector?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:pv-protection-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:pv-protection-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:pvc-protection-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:pvc-protection-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:replicaset-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:replicaset-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:replication-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:replication-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:resourcequota-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:resourcequota-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:root-ca-cert-publisher",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:root-ca-cert-publisher?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:route-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:route-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:service-account-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:service-account-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:service-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:service-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:statefulset-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:statefulset-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:ttl-after-finished-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:ttl-after-finished-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:ttl-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:controller:ttl-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:coredns",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:coredns?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:discovery",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:discovery?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:kube-controller-manager",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:kube-controller-manager?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:kube-dns",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:kube-dns?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:kube-scheduler",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:kube-scheduler?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:monitoring",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:monitoring?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:node",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:node?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:node-proxier",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:node-proxier?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:public-info-viewer",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:public-info-viewer?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:service-account-issuer-discovery",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:service-account-issuer-discovery?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:volume-scheduler",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRoleBinding/system:volume-scheduler?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRoleBinding"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "admin",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/admin?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "cluster-admin",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/cluster-admin?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "edit",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/edit?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "kindnet",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/kindnet?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "kubeadm:get-nodes",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/kubeadm:get-nodes?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "local-path-provisioner-role",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/local-path-provisioner-role?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:aggregate-to-admin",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:aggregate-to-admin?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:aggregate-to-edit",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:aggregate-to-edit?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:aggregate-to-view",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:aggregate-to-view?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:auth-delegator",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:auth-delegator?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:basic-user",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:basic-user?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:certificates.k8s.io:certificatesigningrequests:nodeclient",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:certificates.k8s.io:certificatesigningrequests:nodeclient?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:certificates.k8s.io:certificatesigningrequests:selfnodeclient",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:certificates.k8s.io:certificatesigningrequests:selfnodeclient?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:certificates.k8s.io:kube-apiserver-client-approver",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:certificates.k8s.io:kube-apiserver-client-approver?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:certificates.k8s.io:kube-apiserver-client-kubelet-approver",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:certificates.k8s.io:kube-apiserver-client-kubelet-approver?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:certificates.k8s.io:kubelet-serving-approver",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:certificates.k8s.io:kubelet-serving-approver?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:certificates.k8s.io:legacy-unknown-approver",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:certificates.k8s.io:legacy-unknown-approver?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:attachdetach-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:attachdetach-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:certificate-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:certificate-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:clusterrole-aggregation-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:clusterrole-aggregation-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:cronjob-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:cronjob-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:daemon-set-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:daemon-set-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:deployment-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:deployment-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:disruption-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:disruption-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:endpoint-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:endpoint-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:endpointslice-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:endpointslice-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:endpointslicemirroring-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:endpointslicemirroring-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:ephemeral-volume-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:ephemeral-volume-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:expand-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:expand-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:generic-garbage-collector",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:generic-garbage-collector?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:horizontal-pod-autoscaler",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:horizontal-pod-autoscaler?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:job-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:job-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:namespace-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:namespace-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:node-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:node-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:persistent-volume-binder",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:persistent-volume-binder?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:pod-garbage-collector",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:pod-garbage-collector?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:pv-protection-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:pv-protection-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:pvc-protection-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:pvc-protection-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:replicaset-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:replicaset-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:replication-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:replication-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:resourcequota-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:resourcequota-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:root-ca-cert-publisher",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:root-ca-cert-publisher?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:route-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:route-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:service-account-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:service-account-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:service-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:service-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:statefulset-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:statefulset-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:ttl-after-finished-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:ttl-after-finished-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:controller:ttl-controller",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:controller:ttl-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:coredns",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:coredns?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:discovery",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:discovery?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:heapster",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:heapster?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:kube-aggregator",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:kube-aggregator?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:kube-controller-manager",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:kube-controller-manager?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:kube-dns",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:kube-dns?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:kube-scheduler",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:kube-scheduler?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:kubelet-api-admin",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:kubelet-api-admin?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:monitoring",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:monitoring?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:node",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:node?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:node-bootstrapper",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:node-bootstrapper?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:node-problem-detector",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:node-problem-detector?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:node-proxier",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:node-proxier?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:persistent-volume-provisioner",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:persistent-volume-provisioner?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:public-info-viewer",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:public-info-viewer?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:service-account-issuer-discovery",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:service-account-issuer-discovery?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system:volume-scheduler",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/system:volume-scheduler?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "view",
+      "version": "rbac.authorization.k8s.io/v1",
+      "purl": "pkg:k8s/ClusterRole/view?apiVersion=rbac.authorization.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "ClusterRole"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "standard",
+      "version": "storage.k8s.io/v1",
+      "purl": "pkg:k8s/StorageClass/standard?apiVersion=storage.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "StorageClass"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "clx-control-plane",
+      "version": "storage.k8s.io/v1",
+      "purl": "pkg:k8s/CSINode/clx-control-plane?apiVersion=storage.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "CSINode"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system-cluster-critical",
+      "version": "scheduling.k8s.io/v1",
+      "purl": "pkg:k8s/PriorityClass/system-cluster-critical?apiVersion=scheduling.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "PriorityClass"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system-node-critical",
+      "version": "scheduling.k8s.io/v1",
+      "purl": "pkg:k8s/PriorityClass/system-node-critical?apiVersion=scheduling.k8s.io%2Fv1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "PriorityClass"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "catch-all",
+      "version": "flowcontrol.apiserver.k8s.io/v1beta3",
+      "purl": "pkg:k8s/PriorityLevelConfiguration/catch-all?apiVersion=flowcontrol.apiserver.k8s.io%2Fv1beta3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "PriorityLevelConfiguration"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "exempt",
+      "version": "flowcontrol.apiserver.k8s.io/v1beta3",
+      "purl": "pkg:k8s/PriorityLevelConfiguration/exempt?apiVersion=flowcontrol.apiserver.k8s.io%2Fv1beta3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "PriorityLevelConfiguration"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "global-default",
+      "version": "flowcontrol.apiserver.k8s.io/v1beta3",
+      "purl": "pkg:k8s/PriorityLevelConfiguration/global-default?apiVersion=flowcontrol.apiserver.k8s.io%2Fv1beta3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "PriorityLevelConfiguration"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "leader-election",
+      "version": "flowcontrol.apiserver.k8s.io/v1beta3",
+      "purl": "pkg:k8s/PriorityLevelConfiguration/leader-election?apiVersion=flowcontrol.apiserver.k8s.io%2Fv1beta3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "PriorityLevelConfiguration"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "node-high",
+      "version": "flowcontrol.apiserver.k8s.io/v1beta3",
+      "purl": "pkg:k8s/PriorityLevelConfiguration/node-high?apiVersion=flowcontrol.apiserver.k8s.io%2Fv1beta3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "PriorityLevelConfiguration"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system",
+      "version": "flowcontrol.apiserver.k8s.io/v1beta3",
+      "purl": "pkg:k8s/PriorityLevelConfiguration/system?apiVersion=flowcontrol.apiserver.k8s.io%2Fv1beta3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "PriorityLevelConfiguration"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "workload-high",
+      "version": "flowcontrol.apiserver.k8s.io/v1beta3",
+      "purl": "pkg:k8s/PriorityLevelConfiguration/workload-high?apiVersion=flowcontrol.apiserver.k8s.io%2Fv1beta3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "PriorityLevelConfiguration"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "workload-low",
+      "version": "flowcontrol.apiserver.k8s.io/v1beta3",
+      "purl": "pkg:k8s/PriorityLevelConfiguration/workload-low?apiVersion=flowcontrol.apiserver.k8s.io%2Fv1beta3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "PriorityLevelConfiguration"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "catch-all",
+      "version": "flowcontrol.apiserver.k8s.io/v1beta3",
+      "purl": "pkg:k8s/FlowSchema/catch-all?apiVersion=flowcontrol.apiserver.k8s.io%2Fv1beta3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "FlowSchema"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "endpoint-controller",
+      "version": "flowcontrol.apiserver.k8s.io/v1beta3",
+      "purl": "pkg:k8s/FlowSchema/endpoint-controller?apiVersion=flowcontrol.apiserver.k8s.io%2Fv1beta3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "FlowSchema"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "exempt",
+      "version": "flowcontrol.apiserver.k8s.io/v1beta3",
+      "purl": "pkg:k8s/FlowSchema/exempt?apiVersion=flowcontrol.apiserver.k8s.io%2Fv1beta3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "FlowSchema"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "global-default",
+      "version": "flowcontrol.apiserver.k8s.io/v1beta3",
+      "purl": "pkg:k8s/FlowSchema/global-default?apiVersion=flowcontrol.apiserver.k8s.io%2Fv1beta3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "FlowSchema"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "kube-controller-manager",
+      "version": "flowcontrol.apiserver.k8s.io/v1beta3",
+      "purl": "pkg:k8s/FlowSchema/kube-controller-manager?apiVersion=flowcontrol.apiserver.k8s.io%2Fv1beta3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "FlowSchema"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "kube-scheduler",
+      "version": "flowcontrol.apiserver.k8s.io/v1beta3",
+      "purl": "pkg:k8s/FlowSchema/kube-scheduler?apiVersion=flowcontrol.apiserver.k8s.io%2Fv1beta3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "FlowSchema"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "kube-system-service-accounts",
+      "version": "flowcontrol.apiserver.k8s.io/v1beta3",
+      "purl": "pkg:k8s/FlowSchema/kube-system-service-accounts?apiVersion=flowcontrol.apiserver.k8s.io%2Fv1beta3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "FlowSchema"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "probes",
+      "version": "flowcontrol.apiserver.k8s.io/v1beta3",
+      "purl": "pkg:k8s/FlowSchema/probes?apiVersion=flowcontrol.apiserver.k8s.io%2Fv1beta3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "FlowSchema"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "service-accounts",
+      "version": "flowcontrol.apiserver.k8s.io/v1beta3",
+      "purl": "pkg:k8s/FlowSchema/service-accounts?apiVersion=flowcontrol.apiserver.k8s.io%2Fv1beta3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "FlowSchema"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system-leader-election",
+      "version": "flowcontrol.apiserver.k8s.io/v1beta3",
+      "purl": "pkg:k8s/FlowSchema/system-leader-election?apiVersion=flowcontrol.apiserver.k8s.io%2Fv1beta3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "FlowSchema"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system-node-high",
+      "version": "flowcontrol.apiserver.k8s.io/v1beta3",
+      "purl": "pkg:k8s/FlowSchema/system-node-high?apiVersion=flowcontrol.apiserver.k8s.io%2Fv1beta3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "FlowSchema"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "system-nodes",
+      "version": "flowcontrol.apiserver.k8s.io/v1beta3",
+      "purl": "pkg:k8s/FlowSchema/system-nodes?apiVersion=flowcontrol.apiserver.k8s.io%2Fv1beta3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "FlowSchema"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "workload-leader-election",
+      "version": "flowcontrol.apiserver.k8s.io/v1beta3",
+      "purl": "pkg:k8s/FlowSchema/workload-leader-election?apiVersion=flowcontrol.apiserver.k8s.io%2Fv1beta3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "FlowSchema"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "name": "index.docker.io/library/nginx",
+      "version": "1.27.4",
+      "purl": "pkg:oci/library/nginx@sha256:def7ef7fb89393d88ba6632347672cbde03926256220c2e535e4585335b838a0?repository_url=index.docker.io%2Flibrary%2Fnginx&version=1.27.4",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "Image"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        },
+        {
+          "name": "clx:k8s:source",
+          "value": "main"
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "name": "registry.k8s.io/coredns/coredns",
+      "version": "v1.10.1",
+      "purl": "pkg:oci/coredns/coredns@sha256:97e04611ad43405a2e5863ae17c6f1bc9181bdefdaa78627c432ef754a4eb108?repository_url=registry.k8s.io%2Fcoredns%2Fcoredns&version=v1.10.1",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "Image"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        },
+        {
+          "name": "clx:k8s:source",
+          "value": "main"
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "name": "registry.k8s.io/etcd",
+      "version": "3.5.7-0",
+      "purl": "pkg:oci/etcd@sha256:24bc64e911039ecf00e263be2161797c758b7d82403ca5516ab64047a477f737?repository_url=registry.k8s.io%2Fetcd&version=3.5.7-0",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "Image"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        },
+        {
+          "name": "clx:k8s:source",
+          "value": "main"
+        },
+        {
+          "name": "clx:k8s:ownerRef",
+          "value": "Node/clx-control-plane"
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "name": "index.docker.io/kindest/kindnetd",
+      "version": "v20230511-dc714da8",
+      "purl": "pkg:oci/kindest/kindnetd@sha256:b18bf71b941bae2e12db1c07e567ad14e4febbc778310a0fc64487f1ac877d79?repository_url=index.docker.io%2Fkindest%2Fkindnetd&version=v20230511-dc714da8",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "Image"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        },
+        {
+          "name": "clx:k8s:source",
+          "value": "main"
+        },
+        {
+          "name": "clx:k8s:ownerRef",
+          "value": "DaemonSet/kindnet"
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "name": "registry.k8s.io/kube-apiserver",
+      "version": "v1.27.3",
+      "purl": "pkg:oci/kube-apiserver@sha256:024134bb4e61a4975c5c15db76a7e3571eea74eff90c12a730781bf9c9daedd0?repository_url=registry.k8s.io%2Fkube-apiserver&version=v1.27.3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "Image"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        },
+        {
+          "name": "clx:k8s:source",
+          "value": "main"
+        },
+        {
+          "name": "clx:k8s:ownerRef",
+          "value": "Node/clx-control-plane"
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "name": "registry.k8s.io/kube-controller-manager",
+      "version": "v1.27.3",
+      "purl": "pkg:oci/kube-controller-manager@sha256:336af6020e6377f586577425f1314d95067a9b4a1c8707e90d5062823ec03f43?repository_url=registry.k8s.io%2Fkube-controller-manager&version=v1.27.3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "Image"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        },
+        {
+          "name": "clx:k8s:source",
+          "value": "main"
+        },
+        {
+          "name": "clx:k8s:ownerRef",
+          "value": "Node/clx-control-plane"
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "name": "registry.k8s.io/kube-proxy",
+      "version": "v1.27.3",
+      "purl": "pkg:oci/kube-proxy@sha256:67c927df0c79fb7415d0fc925570687fbec9a36cf13145a6430f9da059965dad?repository_url=registry.k8s.io%2Fkube-proxy&version=v1.27.3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "Image"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        },
+        {
+          "name": "clx:k8s:source",
+          "value": "main"
+        },
+        {
+          "name": "clx:k8s:ownerRef",
+          "value": "DaemonSet/kube-proxy"
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "name": "registry.k8s.io/kube-scheduler",
+      "version": "v1.27.3",
+      "purl": "pkg:oci/kube-scheduler@sha256:4b3d947dd06f4f5e4f417ec4da4bc83017f7cb5387d053ea2b6b906825011b7c?repository_url=registry.k8s.io%2Fkube-scheduler&version=v1.27.3",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "Image"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        },
+        {
+          "name": "clx:k8s:source",
+          "value": "main"
+        },
+        {
+          "name": "clx:k8s:ownerRef",
+          "value": "Node/clx-control-plane"
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "name": "index.docker.io/kindest/local-path-provisioner",
+      "version": "v20230511-dc714da8",
+      "purl": "pkg:oci/kindest/local-path-provisioner@sha256:eec7db0a07d0d8ab2c4a6cd646f8da1572570cf4632f1603b2904f659d1657d5?repository_url=index.docker.io%2Fkindest%2Flocal-path-provisioner&version=v20230511-dc714da8",
+      "properties": [
+        {
+          "name": "clx:k8s:componentKind",
+          "value": "Image"
+        },
+        {
+          "name": "clx:k8s:componentNamespace",
+          "value": ""
+        },
+        {
+          "name": "clx:k8s:source",
+          "value": "main"
+        }
+      ]
+    }
+  ]
+}
