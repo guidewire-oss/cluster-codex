@@ -16,7 +16,9 @@ const timeFormat = "2006-01-02T15:04:05Z07:00"
 
 const ComponentKind = "clx:k8s:componentKind"
 const ComponentNamespace = "clx:k8s:componentNamespace"
-const ComponentVersion = "clx:k8s:version"
+const ComponentVersion = "clx:k8s:componentVersion"
+const ComponentOwnerRef = "clx:k8s:ownerRef"
+const ComponentSourceRef = "clx:k8s:source"
 
 // MarshalJSON formats time correctly
 func (ct *CustomTime) MarshalJSON() ([]byte, error) {

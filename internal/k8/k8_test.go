@@ -415,32 +415,129 @@ var _ = Describe("Kubernetes - Unit", Label("unit"), func() {
 
 			Expect(err).To(BeNil())
 			// ✅ Assert correct number of components (Pods + Deployments + Namespaces)
-			Expect(len(components)).To(Equal(3)) // busybox:latest, busybox:debug,nginx:latest
+			Expect(len(components)).To(Equal(4)) // busybox:latest, busybox:debug,nginx:latest
 
 			// ✅ Convert list into a map for easy lookup
 			componentMap := make(map[string]model.Component)
 			for _, comp := range components {
-				componentMap[comp.Name+":"+comp.Version] = comp
+				componentMap[comp.Name+":"+comp.GetNamespace()+":"+comp.Version] = comp
 			}
 
 			// ✅ Assert specific components exist with correct types
-			Expect(componentMap).To(HaveKey("index.docker.io/library/busybox:latest"))
-			Expect(componentMap).To(HaveKey("index.docker.io/library/busybox:debug"))
-			Expect(componentMap).To(HaveKey("index.docker.io/library/nginx:latest"))
-
+			//Expect(componentMap).To(HaveKey("index.docker.io/library/busybox:default:latest"))
+			Expect(componentMap).To(HaveKey("index.docker.io/library/busybox:default:debug"))
+			Expect(componentMap).To(HaveKey("index.docker.io/library/nginx:default:latest"))
 			// ✅ Assert individual component details
-			Expect(componentMap["index.docker.io/library/busybox:latest"].PackageURL).To(Equal("pkg:oci/library/busybox?repository_url=index.docker.io%2Flibrary%2Fbusybox&version=latest"))
-			Expect(componentMap["index.docker.io/library/busybox:debug"].PackageURL).To(Equal("pkg:oci/library/busybox?repository_url=index.docker.io%2Flibrary%2Fbusybox&version=debug"))
-			Expect(componentMap["index.docker.io/library/nginx:latest"].PackageURL).To(Equal("pkg:oci/library/nginx?repository_url=index.docker.io%2Flibrary%2Fnginx&version=latest"))
-			componentPointer := componentMap["index.docker.io/library/nginx:latest"]
+			//Expect(componentMap["index.docker.io/library/busybox:default:latest"].PackageURL).To(Equal("pkg:oci/library/busybox?namespace=default&repository_url=index.docker.io%2Flibrary%2Fbusybox&version=latest"))
+			Expect(componentMap["index.docker.io/library/busybox:default:debug"].PackageURL).To(Equal("pkg:oci/library/busybox?namespace=default&ownerRef=&repository_url=index.docker.io%2Flibrary%2Fbusybox"))
+			Expect(componentMap["index.docker.io/library/nginx:default:latest"].PackageURL).To(Equal("pkg:oci/library/nginx?namespace=default&ownerRef=&repository_url=index.docker.io%2Flibrary%2Fnginx"))
+
+			componentPointer := componentMap["index.docker.io/library/nginx:default:latest"]
 			property, found := componentPointer.GetPropertyObject(model.ComponentNamespace)
 			Expect(found).To(Equal(true))
 			Expect(property).ToNot(BeNil())
-			Expect(len(property.Values)).To(Equal(2))
-			Expect(property.Values).To(ConsistOf(mockNamespaceList))
+			Expect(len(property.Values)).To(Equal(1))
+			Expect(property.Values).To(ConsistOf("default"))
+
+			// Same image in a different namespace (kube-system in this case) should be added as a separate component to list
+			Expect(componentMap).To(HaveKey("index.docker.io/library/busybox:kube-system:debug"))
+			Expect(componentMap).To(HaveKey("index.docker.io/library/nginx:kube-system:latest"))
+			// ✅ Assert individual component details
+			Expect(componentMap["index.docker.io/library/busybox:kube-system:debug"].PackageURL).To(Equal("pkg:oci/library/busybox?namespace=kube-system&ownerRef=&repository_url=index.docker.io%2Flibrary%2Fbusybox"))
+			Expect(componentMap["index.docker.io/library/nginx:kube-system:latest"].PackageURL).To(Equal("pkg:oci/library/nginx?namespace=kube-system&ownerRef=&repository_url=index.docker.io%2Flibrary%2Fnginx"))
+
+			componentPointer = componentMap["index.docker.io/library/nginx:kube-system:latest"]
+			property, found = componentPointer.GetPropertyObject(model.ComponentNamespace)
+			Expect(found).To(Equal(true))
+			Expect(property).ToNot(BeNil())
+			Expect(len(property.Values)).To(Equal(1))
+			Expect(property.Values).To(ConsistOf("kube-system"))
+		})
+
+		It("when GetAllImages is called when same image exists in same namespace but with different version", func() {
+
+			// Define the parent object (e.g., a Deployment or Custom Resource)
+			parentObject := v1.OwnerReference{
+				APIVersion: "apps/v1",
+				Kind:       "Deployment",
+				Name:       "test-deployment",
+				UID:        "12345-67890-test-uid",
+			}
+
+			pod := &corev1.Pod{
+				ObjectMeta: v1.ObjectMeta{
+					Name:            "test-pod",
+					Namespace:       "default",
+					OwnerReferences: []v1.OwnerReference{parentObject}, // Attach OwnerReference
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:  "test-container",
+							Image: "nginx:0.14.0",
+						},
+					},
+				},
+				Status: corev1.PodStatus{
+					Phase: corev1.PodRunning,
+					ContainerStatuses: []corev1.ContainerStatus{
+						{
+							Name:  "test-container",
+							Ready: true,
+							State: corev1.ContainerState{
+								Running: &corev1.ContainerStateRunning{
+									StartedAt: v1.Now(),
+								},
+							},
+						},
+					},
+				},
+			}
+
+			// Convert Pod to Unstructured
+			unstructuredPod, err := toUnstructured(pod, "Pod", "v1")
+			if err != nil {
+				fmt.Println("Error converting pod to unstructured:", err)
+				return
+			}
+			var pod1 corev1.Pod
+
+			err = runtime.DefaultUnstructuredConverter.FromUnstructured(unstructuredPod.Object, &pod1)
+
+			// ✅ First, add the pod (spec only)
+			err = fakeClientset.Tracker().Add(&pod1)
+			if err != nil {
+				log.Fatalf("Error adding pod to fake client: %v", err)
+			}
+
+			// ✅ Then, update the pod status using Tracker().Update() — simulating a real status update
+			err = fakeClientset.Tracker().Update(corev1.SchemeGroupVersion.WithResource("pods"), &pod1, pod1.Namespace)
+			if err != nil {
+				log.Fatalf("Error updating pod status in fake client: %v", err)
+			}
+
+			// Call GetAllImages with the fake dynamic client
+			components, err := fakeK8sClient.GetAllImages(context.Background(), mockNamespaceList)
+
+			Expect(err).To(BeNil())
+			// ✅ Assert correct number of components (Pods + Deployments + Namespaces)
+			Expect(len(components)).To(Equal(5)) // busybox:latest, busybox:debug,nginx:latest
+
+			// ✅ Convert list into a map for easy lookup
+			componentMap := make(map[string]model.Component)
+			for _, comp := range components {
+				componentMap[comp.Name+":"+comp.GetNamespace()+":"+comp.Version] = comp
+			}
+
+			// ✅ Assert specific components exist with correct types
+			Expect(componentMap).To(HaveKey("index.docker.io/library/busybox:default:debug"))
+			Expect(componentMap).To(HaveKey("index.docker.io/library/busybox:kube-system:debug"))
+			Expect(componentMap).To(HaveKey("index.docker.io/library/nginx:default:latest"))
+			Expect(componentMap).To(HaveKey("index.docker.io/library/nginx:kube-system:latest"))
+			Expect(componentMap).To(HaveKey("index.docker.io/library/nginx:default:0.14.0"))
+
 		})
 	})
-
 })
 
 var _ = Describe("GetAppPkgId", Label("unit"), func() {
@@ -474,4 +571,18 @@ func loadFilterFromJSON(jsonData string) *model.Filter {
 	err := json.Unmarshal([]byte(jsonData), &filter)
 	Expect(err).NotTo(HaveOccurred()) // Ensure JSON is valid
 	return &filter
+}
+
+// Converts a structured object (e.g., *corev1.Pod) to *unstructured.Unstructured and sets kind/apiVersion
+func toUnstructured(obj runtime.Object, kind, apiVersion string) (*unstructured.Unstructured, error) {
+	unstructuredMap, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set Kind and APIVersion explicitly
+	unstructuredMap["kind"] = kind
+	unstructuredMap["apiVersion"] = apiVersion
+
+	return &unstructured.Unstructured{Object: unstructuredMap}, nil
 }

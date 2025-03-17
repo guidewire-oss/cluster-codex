@@ -1,7 +1,7 @@
 {
   "non-namespaced-inclusions": {
     "resources": [
-      "Node"
+      ""
     ]
   },
   "namespaced-inclusions": [
@@ -11,12 +11,7 @@
         "*"
       ],
       "resources": [
-        "HelmRelease"
-      ]
-    },
-    {
-      "resources": [
-        "Deployment"
+        "HelmChart"
       ]
     }
   ]
