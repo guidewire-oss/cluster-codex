@@ -26,5 +26,6 @@ func Execute() {
 
 func init() {
 	rootCmd.AddCommand(GenerateCmd)
+	rootCmd.AddCommand(CompareCmd)
 	rootCmd.PersistentFlags().StringVarP(&logLevel, "log-level", "l", "warn", "Set the logging level (debug, info, warn, error)")
 }
