@@ -72,7 +72,7 @@ var _ = Describe("GenerateBOM - Unit", Label("unit"), func() {
 				return mockResponse, nil
 			}
 
-			bom := GenerateBOM(fakeK8sClient, []string{})
+			bom := GenerateBOM(fakeK8sClient)
 
 			Expect(bom).ToNot(BeNil())
 			Expect(bom.Components).To(HaveLen(1))
@@ -86,7 +86,7 @@ var _ = Describe("GenerateBOM - Unit", Label("unit"), func() {
 				return nil, assert.AnError
 			}
 
-			bom := GenerateBOM(fakeK8sClient, []string{})
+			bom := GenerateBOM(fakeK8sClient)
 
 			Expect(bom).To(BeNil())
 		})

@@ -25,17 +25,17 @@ Optional flags include:
 
 ```plain
 Flags:
-  -f, --format string     [optional] cyclonedx-json (default "cyclonedx-json")
-  -o, --out-path string   [optional] Path to write generated file to. (default ./output.json)
-  -f, --filters string    [optional] Path to a json file containing filters. (default ./filters.json)
-  -h, --help              [optional] help for generate
-  -l, --log-level string  [optional] Set the logging level (debug, info, warn, error) (default "warn")
+  -f, --format string       [optional] cyclonedx-json (default "cyclonedx-json")
+  -o, --out-path string     [optional] Path to write generated file to. (default ./output.json)
+  -f, --filter-path string  [optional] Path to a json file containing filterPath.
+  -h, --help                [optional] help for generate
+  -l, --log-level string    [optional] Set the logging level (debug, info, warn, error) (default "warn")
 
 ```
 
 ### Filters
-You can specify a file that includes filters. Currently only inclusion filters for namespace are implemented. The 
-default filter file is `./filters.json` and `.gitignore` is set to ignore `filter*.json` so that test filters are not
+You can specify a file that includes filterPath. Currently only inclusion filterPath for namespace are implemented. There 
+is no default filter file. `.gitignore` is set to ignore `filter*.json` so that if you add a test filter, they are not
 added to the repo by accident. A sample filter file is `./sample-filter.json`.
 
 ### Output

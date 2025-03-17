@@ -24,7 +24,10 @@ var _ = Describe("GenerateBOM - Integration", Label("integration"), func() {
 
 		DescribeTable("should have valid metadata, components and images",
 			func(namespaces []string, findNamespace bool) {
-				bom = GenerateBOM(k8client, namespaces)
+				// Set the filter for the namespaces
+				k8.K8Filter = &model.Inclusions{Inclusions: []model.Inclusion{{Namespaces: namespaces}}}
+
+				bom = GenerateBOM(k8client)
 
 				Expect(bom).ToNot(BeNil())
 				Expect(bom.BomFormat).To(Equal("CycloneDX"))

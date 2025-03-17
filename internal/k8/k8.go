@@ -20,7 +20,6 @@ import (
 	"log"
 	"net/url"
 	"os"
-	"slices"
 	"strings"
 )
 
@@ -125,12 +124,6 @@ func GetClient() (*K8sClient, error) {
 }
 
 func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, error) {
-	// Retrieve the inclusionFilter from context (if provided)
-	//var inclusionFilter K8sFilter
-	//if val, ok := ctx.Value(FilterKey).(K8sFilter); ok {
-	//	inclusionFilter = val
-	//}
-
 	// Get all API resources
 	apiResourceLists, err := c.Discovery.ServerPreferredResources()
 	if err != nil {
@@ -139,17 +132,17 @@ func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, er
 
 	var k8sResourceList []model.Component
 
-	if len(K8Filter.Inclusions) > 0 {
-		for _, inc := range K8Filter.Inclusions {
-			c.getResources(ctx, apiResourceLists, inc, &k8sResourceList)
-		}
-	} else {
-		c.getResources(ctx, apiResourceLists, model.Inclusion{}, &k8sResourceList)
-	}
-	return k8sResourceList, nil
-}
-
-func (c *K8sClient) getResources(ctx context.Context, apiResourceLists []*metav1.APIResourceList, inc model.Inclusion, k8sResourceList *[]model.Component) {
+	//	if len(K8Filter.Inclusions) > 0 {
+	//		for _, inc := range K8Filter.Inclusions {
+	//			c.getResources(ctx, apiResourceLists, inc, &k8sResourceList)
+	//		}
+	//	} else {
+	//		c.getResources(ctx, apiResourceLists, model.Inclusion{}, &k8sResourceList)
+	//	}
+	//	return k8sResourceList, nil
+	//}
+	//
+	//func (c *K8sClient) getResources(ctx context.Context, apiResourceLists []*metav1.APIResourceList, inc model.Inclusion, k8sResourceList *[]model.Component) {
 	for _, resourceList := range apiResourceLists {
 		gv, err := schema.ParseGroupVersion(resourceList.GroupVersion)
 		if err != nil {
@@ -157,9 +150,9 @@ func (c *K8sClient) getResources(ctx context.Context, apiResourceLists []*metav1
 		}
 		// First, go through all the non namespaced resources, store them, and get the list of namespaces
 		for _, resource := range resourceList.APIResources {
-			if inc.Resources != nil && len(inc.Resources) > 0 && !slices.Contains(inc.Resources, strings.ToLower(resource.Kind)) {
-				continue
-			}
+			//if inc.Resources != nil && len(inc.Resources) > 0 && !slices.Contains(inc.Resources, strings.ToLower(resource.Kind)) {
+			//	continue
+			//}
 			config.ClxLogger.Info("Processing resource", "resource", resource.Name)
 			gvr := schema.GroupVersionResource{
 				Group:    gv.Group,
@@ -168,40 +161,41 @@ func (c *K8sClient) getResources(ctx context.Context, apiResourceLists []*metav1
 			}
 			// Handle pagination while fetching resources
 			var continueToken string
-			for _, namespace := range inc.Namespaces {
-				for {
-					listOptions := metav1.ListOptions{
-						Continue: continueToken, // Use pagination token if present
-					}
+			//for _, namespace := range inc.Namespaces {
+			for {
+				listOptions := metav1.ListOptions{
+					Continue: continueToken, // Use pagination token if present
+				}
 
-					//k8sResources, k8serr := c.DynamicClient.Resource(gvr).List(ctx, listOptions)
-					k8sResources, k8serr := c.DynamicClient.Resource(gvr).Namespace(namespace).List(ctx, listOptions)
-					if k8serr != nil {
-						if _, exists := unnecessaryResources[gvr.Resource]; exists {
-							config.ClxLogger.Debug("Failed to list resources for", "resource", gvr.Resource, "error", k8serr)
-						} else {
-							config.ClxLogger.Warn("Failed to list resources for", "resource", gvr.Resource, "error", k8serr)
-						}
-						break
+				k8sResources, k8serr := c.DynamicClient.Resource(gvr).List(ctx, listOptions)
+				//k8sResources, k8serr := c.DynamicClient.Resource(gvr).Namespace(namespace).List(ctx, listOptions)
+				if k8serr != nil {
+					if _, exists := unnecessaryResources[gvr.Resource]; exists {
+						config.ClxLogger.Debug("Failed to list resources for", "resource", gvr.Resource, "error", k8serr)
+					} else {
+						config.ClxLogger.Warn("Failed to list resources for", "resource", gvr.Resource, "error", k8serr)
 					}
-					if k8sResources == nil || len(k8sResources.Items) == 0 {
-						config.ClxLogger.Info("No resources found for GVR", "gvr", gvr)
-						break
-					}
+					break
+				}
+				if k8sResources == nil || len(k8sResources.Items) == 0 {
+					config.ClxLogger.Info("No resources found for GVR", "gvr", gvr)
+					break
+				}
 
-					for _, item := range k8sResources.Items {
-						addToComponentList(item, k8sResourceList)
-					}
+				for _, item := range k8sResources.Items {
+					//	//if K8Filter.Inclusions
+					addToComponentList(item, &k8sResourceList)
+				}
 
-					// Handle pagination
-					continueToken = k8sResources.GetContinue()
-					if continueToken == "" {
-						break
-					}
+				// Handle pagination
+				continueToken = k8sResources.GetContinue()
+				if continueToken == "" {
+					break
 				}
 			}
 		}
 	}
+	return k8sResourceList, nil
 }
 
 func contains(slice []string, item string) bool {

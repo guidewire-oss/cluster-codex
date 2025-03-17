@@ -276,16 +276,9 @@ var _ = Describe("Kubernetes - Unit", Label("unit"), func() {
 		DescribeTable("should return all the components in the cluster",
 			func(namespaces []string, expectedComponents int, includeKubeSystem bool) {
 				// Setup the filter with the namespaces
-				var ctx context.Context
-				if len(namespaces) == 0 {
-					ctx = context.Background()
-				} else {
-					ctx = context.WithValue(context.Background(), k8.FilterKey, k8.K8sFilter{
-						Namespaces: namespaces,
-					})
-				}
+				k8.K8Filter = &model.Inclusions{Inclusions: []model.Inclusion{{Namespaces: namespaces}}}
 
-				components, err := fakeK8sClient.GetAllComponents(ctx)
+				components, err := fakeK8sClient.GetAllComponents(context.Background())
 
 				Expect(err).To(BeNil())
 				// ✅ Assert correct number of components (Pods + Deployments + Namespaces)
@@ -374,7 +367,7 @@ var _ = Describe("Kubernetes - Unit", Label("unit"), func() {
 					Expect(found && kind == "Services").ToNot(BeTrue(), "Expected not to find a 'Service', but found one")
 				}
 			},
-			Entry("No Namespaces", []string{}, 7, true),
+			Entry("No Namespaces", []string{""}, 7, true),
 			Entry("Specific Test Namespaces", mockNamespaceList, 7, true),
 			Entry("Specific Test Namespace", []string{"default"}, 5, false),
 		)

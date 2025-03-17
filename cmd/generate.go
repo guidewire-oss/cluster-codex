@@ -20,10 +20,10 @@ import (
 )
 
 var (
-	format  string
-	outPath string
-	filters string
-	sort    bool
+	format     string
+	outPath    string
+	filterPath string
+	sort       bool
 )
 
 var GenerateCmd = &cobra.Command{
@@ -35,7 +35,7 @@ var GenerateCmd = &cobra.Command{
 func init() {
 	GenerateCmd.Flags().StringVarP(&format, "format", "f", "cyclonedx-json", "Format of the generated BOM.")
 	GenerateCmd.Flags().StringVarP(&outPath, "out-path", "o", "./output.json", "Path and filename of generated cluster codex file.")
-	GenerateCmd.Flags().StringVarP(&filters, "filters", "i", "", "Path to a json file containing inclusion filters.")
+	GenerateCmd.Flags().StringVarP(&filterPath, "filter-path", "i", "", "Path to a json file containing inclusion filterPath.")
 	GenerateCmd.Flags().BoolVarP(&sort, "sort", "s", false, "Sort the generated BOM JSON in Application, Kind, Name, Namespace order")
 }
 
@@ -121,7 +121,7 @@ func GenerateBOM(k8client k8.K8sClientInterface) *model.BOM {
 	}
 	bom.Components = componentList
 
-	namespaceList := getNamespaceList()
+	namespaceList := k8.K8Filter.GetNamespaceList()
 	if len(namespaceList) <= 0 {
 		namespaceComponents := bom.FindApplicationsByKind("Namespace", "")
 		for _, component := range namespaceComponents {
@@ -160,15 +160,15 @@ func ValidatePath(filePath string) error {
 func getInclusionFilter() error {
 	//k8.K8Filter = &model.Inclusions{Inclusions: []model.Inclusion{{Namespaces: []string{""}}}}
 
-	if filters != "" {
+	if filterPath != "" {
 		// Check if file exists
-		if _, err := os.Stat(filters); os.IsNotExist(err) {
-			config.ClxLogger.Error("file does not exist: %s", filters)
+		if _, err := os.Stat(filterPath); os.IsNotExist(err) {
+			config.ClxLogger.Error("file does not exist", "filterPath file path", filterPath)
 			log.Fatalf("file does not exist: %s", err)
 		}
 
 		// Read file contents
-		data, err := ioutil.ReadFile(filters)
+		data, err := ioutil.ReadFile(filterPath)
 		if err != nil {
 			return fmt.Errorf("failed to read file: %v", err)
 		}
@@ -207,13 +207,4 @@ func getInclusionFilter() error {
 		}
 	}
 	return nil
-}
-
-func getNamespaceList() []string {
-
-	var namespaces []string
-	for _, inclusion := range k8.K8Filter.Inclusions {
-		namespaces = append(namespaces, inclusion.Namespaces...)
-	}
-	return namespaces
 }

@@ -105,6 +105,24 @@ type Inclusions struct {
 	Inclusions []Inclusion `json:"inclusions"`
 }
 
+func (inclusions *Inclusions) IsAllNamespaces() bool {
+	for _, inc := range inclusions.Inclusions {
+		if inc.Namespaces == nil || len(inc.Namespaces) == 0 || inc.Namespaces[0] == "*" {
+			return true
+		}
+	}
+	return false
+}
+
+func (inclusions *Inclusions) GetNamespaceList() []string {
+
+	var namespaces []string
+	for _, inclusion := range inclusions.Inclusions {
+		namespaces = append(namespaces, inclusion.Namespaces...)
+	}
+	return namespaces
+}
+
 func (component *Component) AddProperty(key string, value string) {
 	existingProperty, found := component.GetPropertyObject(key)
 	if found {
