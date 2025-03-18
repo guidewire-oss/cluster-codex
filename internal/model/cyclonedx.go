@@ -95,32 +95,45 @@ type Component struct {
 	Hashes     []Hash     `json:"hashes,omitempty"`
 }
 
+type Filter struct {
+	NonNamespacedInclusions NonNamespacedInclusions `json:"namespaced-inclusions"`
+	NamespacedInclusions    []NamespacedInclusion   `json:"namespaced-inclusions"`
+}
+
 // Inclusion - Struct to match JSON structure
-type Inclusion struct {
+type NamespacedInclusion struct {
 	Namespaces []string `json:"namespaces"`
 	Resources  []string `json:"resources"`
 }
 
-type Inclusions struct {
-	Inclusions []Inclusion `json:"inclusions"`
+type NonNamespacedInclusions struct {
+	Resources []string `json:"resources"`
 }
 
-func (inclusions *Inclusions) IsAllNamespaces() bool {
-	for _, inc := range inclusions.Inclusions {
-		if inc.Namespaces == nil || len(inc.Namespaces) == 0 || inc.Namespaces[0] == "*" {
+func (filter *Filter) IsAllNamespacesFilter() bool {
+	for _, f := range filter.NamespacedInclusions {
+		if f.Namespaces == nil || len(f.Namespaces) == 0 || f.Namespaces[0] == "*" {
 			return true
 		}
 	}
 	return false
 }
 
-func (inclusions *Inclusions) GetNamespaceList() []string {
+func (filter *Filter) GetNamespaceList() []string {
 
 	var namespaces []string
-	for _, inclusion := range inclusions.Inclusions {
-		namespaces = append(namespaces, inclusion.Namespaces...)
+	for _, f := range filter.NamespacedInclusions {
+		namespaces = append(namespaces, f.Namespaces...)
 	}
 	return namespaces
+}
+
+func (filter *Filter) IsNonNamespacedAllKinds() bool {
+	f := filter.NonNamespacedInclusions
+	if len(f.Resources) == 0 || f.Resources[0] == "*" {
+		return true
+	}
+	return false
 }
 
 func (component *Component) AddProperty(key string, value string) {

@@ -68,8 +68,8 @@ var _ = Describe("GenerateBOM - Unit", Label("unit"), func() {
 				},
 			}
 			mockResponse := []model.Component{mockComponent}
-			fakeK8sClient.GetAllComponentsStub = func(ctx context.Context) ([]model.Component, error) {
-				return mockResponse, nil
+			fakeK8sClient.GetAllComponentsStub = func(ctx context.Context) ([]model.Component, []string, error) {
+				return mockResponse, []string{}, nil
 			}
 
 			bom := GenerateBOM(fakeK8sClient)
@@ -82,8 +82,8 @@ var _ = Describe("GenerateBOM - Unit", Label("unit"), func() {
 
 	Context("when GetAllComponents returns an error", func() {
 		It("should return nil BOM", func() {
-			fakeK8sClient.GetAllComponentsStub = func(ctx context.Context) ([]model.Component, error) {
-				return nil, assert.AnError
+			fakeK8sClient.GetAllComponentsStub = func(ctx context.Context) ([]model.Component, []string, error) {
+				return nil, []string{}, assert.AnError
 			}
 
 			bom := GenerateBOM(fakeK8sClient)

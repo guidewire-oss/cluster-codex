@@ -114,7 +114,7 @@ func GenerateBOM(k8client k8.K8sClientInterface) *model.BOM {
 	bom := model.NewBOM()
 	ctx := context.Background()
 
-	componentList, err := k8client.GetAllComponents(ctx)
+	componentList, namespaces, err := k8client.GetAllComponents(ctx)
 	if err != nil {
 		config.ClxLogger.Error("Error getting resources.", "error", err)
 		return nil // Handle error case by returning nil BOM or some default value
@@ -123,10 +123,7 @@ func GenerateBOM(k8client k8.K8sClientInterface) *model.BOM {
 
 	namespaceList := k8.K8Filter.GetNamespaceList()
 	if len(namespaceList) <= 0 {
-		namespaceComponents := bom.FindApplicationsByKind("Namespace", "")
-		for _, component := range namespaceComponents {
-			namespaceList = append(namespaceList, component.Name)
-		}
+		namespaceList = namespaces // Get the list of namespaces if no filter is defined for namespaces
 	}
 
 	componentList, err = k8client.GetAllImages(ctx, namespaceList)
@@ -157,6 +154,7 @@ func ValidatePath(filePath string) error {
 	return nil
 }
 
+// TODO: Add non-namespaced as well
 func getInclusionFilter() error {
 	//k8.K8Filter = &model.Inclusions{Inclusions: []model.Inclusion{{Namespaces: []string{""}}}}
 
@@ -174,16 +172,16 @@ func getInclusionFilter() error {
 		}
 
 		// Parse JSON
-		var inc model.Inclusions
-		err = json.Unmarshal(data, &inc)
+		var filter model.Filter
+		err = json.Unmarshal(data, &filter)
 		if err != nil {
 			return fmt.Errorf("failed to parse JSON: %v", err)
 		}
 
-		for idx, inclusion := range inc.Inclusions {
+		for idx, inclusion := range filter.NamespacedInclusions {
 			// Convert Resources to lowercase
 			for j, resource := range inclusion.Resources {
-				inc.Inclusions[idx].Resources[j] = strings.ToLower(resource)
+				filter.NamespacedInclusions[idx].Resources[j] = strings.ToLower(resource)
 			}
 		}
 
@@ -191,11 +189,11 @@ func getInclusionFilter() error {
 		// The below logic is to detect
 		// * if the namespace is "*" and the corresponding resource array is empty considered for all resources for all namespaces.
 		// * if the namespace is "*" and the corresponding resource array is NOT empty the namespace or that inclusion set to "*" which means query the specific resources in all namespaces
-		for idx, inclusion := range inc.Inclusions {
+		for idx, inclusion := range filter.NamespacedInclusions {
 			for j, _ := range inclusion.Namespaces {
-				if inc.Inclusions[idx].Namespaces[j] == "*" {
-					inc.Inclusions[idx].Namespaces = []string{"*"}
-					if len(inc.Inclusions[idx].Resources) == 0 {
+				if filter.NamespacedInclusions[idx].Namespaces[j] == "*" {
+					filter.NamespacedInclusions[idx].Namespaces = []string{"*"}
+					if len(filter.NamespacedInclusions[idx].Resources) == 0 {
 						setFilter = false
 					}
 					break
@@ -203,7 +201,7 @@ func getInclusionFilter() error {
 			}
 		}
 		if setFilter {
-			k8.K8Filter = &inc
+			k8.K8Filter = filter
 		}
 	}
 	return nil
