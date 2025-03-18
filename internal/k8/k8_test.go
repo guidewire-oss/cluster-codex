@@ -312,14 +312,28 @@ var _ = Describe("Kubernetes - Unit", Label("unit"), func() {
 				Expect(componentMap).To(HaveKey("deployment-1"))
 
 				// Assert only if Namespace Kind is included in the NonNamespacedInclusion
-				if len(nonNamespacedResources) > 0 {
-					if k8.Contains(nonNamespacedResources, "Namespace") {
-						Expect(componentMap).To(HaveKey("default"))     // Namespace
-						Expect(componentMap).To(HaveKey("kube-system")) // Namespace
-					}
-				} else {
+				if len(nonNamespacedResources) == 0 || k8.Contains(nonNamespacedResources, "Namespace") {
 					Expect(componentMap).To(HaveKey("default"))     // Namespace
 					Expect(componentMap).To(HaveKey("kube-system")) // Namespace
+					// ✅ Check for namespace handling
+					Expect(componentMap["default"].Type).To(Equal("application"))
+					if includeKubeSystem {
+						Expect(componentMap["kube-system"].Type).To(Equal("application"))
+					}
+					// ✅ Check properties for Namespaces (They should NOT have a model.ComponentNamespace property)
+					Expect(componentMap["default"].Properties).To(ContainElement(
+						model.Property{Name: model.ComponentKind, Values: []string{"Namespace"}},
+					))
+					Expect(componentMap["default"].Properties).ToNot(ContainElement(
+						model.Property{Name: model.ComponentNamespace, Values: []string{"default"}}, // Namespaces shouldn't have this property
+					))
+
+					Expect(componentMap["kube-system"].Properties).To(ContainElement(
+						model.Property{Name: model.ComponentKind, Values: []string{"Namespace"}},
+					))
+					Expect(componentMap["kube-system"].Properties).ToNot(ContainElement(
+						model.Property{Name: model.ComponentNamespace, Values: []string{"kube-system"}},
+					))
 				}
 
 				// ✅ Assert individual component details
@@ -336,12 +350,6 @@ var _ = Describe("Kubernetes - Unit", Label("unit"), func() {
 				Expect(componentMap["pv-1"].Type).To(Equal("application"))
 				Expect(componentMap["pv-1"].Name).To(Equal("pv-1"))
 				Expect(componentMap["pv-1"].PackageURL).To(Equal(fmt.Sprintf("%s:%s/PersistentVolume/pv-1?apiVersion=v1", model.PkgPrefix, model.K8sPrefix)))
-
-				// ✅ Check for namespace handling
-				Expect(componentMap["default"].Type).To(Equal("application"))
-				if includeKubeSystem {
-					Expect(componentMap["kube-system"].Type).To(Equal("application"))
-				}
 
 				// ✅ Check properties for Pods (Namespace & Kind)
 				Expect(componentMap["pod-1"].Properties).To(ContainElements(
@@ -366,21 +374,6 @@ var _ = Describe("Kubernetes - Unit", Label("unit"), func() {
 				Expect(componentMap["deployment-1"].Properties).To(ContainElements(
 					model.Property{Name: model.ComponentKind, Values: []string{"Deployment"}},
 					model.Property{Name: model.ComponentNamespace, Values: []string{"default"}},
-				))
-
-				// ✅ Check properties for Namespaces (They should NOT have a model.ComponentNamespace property)
-				Expect(componentMap["default"].Properties).To(ContainElement(
-					model.Property{Name: model.ComponentKind, Values: []string{"Namespace"}},
-				))
-				Expect(componentMap["default"].Properties).ToNot(ContainElement(
-					model.Property{Name: model.ComponentNamespace, Values: []string{"default"}}, // Namespaces shouldn't have this property
-				))
-
-				Expect(componentMap["kube-system"].Properties).To(ContainElement(
-					model.Property{Name: model.ComponentKind, Values: []string{"Namespace"}},
-				))
-				Expect(componentMap["kube-system"].Properties).ToNot(ContainElement(
-					model.Property{Name: model.ComponentNamespace, Values: []string{"kube-system"}},
 				))
 
 				// ✅ Check properties for non namespaced kind PersistentVolume (They Should NOT have ComponentNamespace property)
