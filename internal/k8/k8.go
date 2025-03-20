@@ -1,7 +1,7 @@
 package k8
 
 import (
-	"cluster-codex/internal/config"
+	config "cluster-codex/internal/config"
 	"cluster-codex/internal/model"
 	"cluster-codex/internal/utils"
 	"context"
@@ -23,6 +23,8 @@ import (
 	"os"
 	"strings"
 )
+
+//var logger *config.ClxLogger
 
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . K8sClientInterface
 type K8sClientInterface interface {
@@ -82,15 +84,15 @@ var unnecessaryResources = map[string]struct{}{
 func GetClient() (*K8sClient, error) {
 
 	kubeConfigPath := os.Getenv("KUBECONFIG")
-	config.ClxLogger.Info("Reading kubeconfig", "path", kubeConfigPath)
+	//config.Logger.Infof("Reading kubeconfig path %s", kubeConfigPath)
 
 	if kubeConfigPath == "" {
 		kubeConfigPath = os.Getenv("HOME") + "/.kube/config"
 	}
 	if _, err := os.Stat(kubeConfigPath); os.IsNotExist(err) {
-		log.Fatalf("File does not exist: %s", kubeConfigPath)
+		//log.Fatalf("File does not exist: %s", kubeConfigPath)
 	} else if err != nil {
-		log.Fatalf("Error accessing file: %v", err)
+		//log.Fatalf("Error accessing file: %v", err)
 	}
 
 	config, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
@@ -102,13 +104,13 @@ func GetClient() (*K8sClient, error) {
 	// Create the clientset from the config.
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		log.Printf("Error creating clientset: %v", err)
+		//log.Printf("Error creating clientset: %v", err)
 		return nil, err
 	}
 
 	dynamicClient, err := dynamic.NewForConfig(config)
 	if err != nil {
-		log.Printf("Error creating dynamic client: %v", err)
+		//log.Printf("Error creating dynamic client: %v", err)
 		return nil, err
 	}
 
@@ -121,7 +123,7 @@ func GetClient() (*K8sClient, error) {
 	// Create discovery client
 	K8sClient.Discovery, err = discovery.NewDiscoveryClientForConfig(config)
 	if err != nil {
-		log.Fatalf("Failed to create discovery client: %v", err)
+		//log.Fatalf("Failed to create discovery client: %v", err)
 	}
 	return K8sClient, nil
 }
@@ -131,7 +133,7 @@ func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, []
 	// Get all API resources
 	apiResourceLists, err := c.Discovery.ServerPreferredResources()
 	if err != nil {
-		log.Fatalf("Failed to list API groups and resources: %v", err)
+		//log.Fatalf("Failed to list API groups and resources: %v", err)
 	}
 
 	var k8sResourceList []model.Component
@@ -150,14 +152,14 @@ func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, []
 	for _, resourceList := range apiResourceLists {
 		gv, err := schema.ParseGroupVersion(resourceList.GroupVersion)
 		if err != nil {
-			log.Fatalf("Could not retrieve group version %v", err)
+			//log.Fatalf("Could not retrieve group version %v", err)
 		}
 		// First, go through all the non namespaced resources, store them, and get the list of namespaces
 		for _, resource := range resourceList.APIResources {
 			//if inc.Resources != nil && len(inc.Resources) > 0 && !slices.Contains(inc.Resources, strings.ToLower(resource.Kind)) {
 			//	continue
 			//}
-			config.ClxLogger.Info("Processing resource", "resource", resource.Name)
+			config.Logger.Infof("Processing resource", "resource", resource.Name)
 			gvr := schema.GroupVersionResource{
 				Group:    gv.Group,
 				Version:  gv.Version,
@@ -175,14 +177,14 @@ func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, []
 				//k8sResources, k8serr := c.DynamicClient.Resource(gvr).Namespace(namespace).List(ctx, listOptions)
 				if k8serr != nil {
 					if _, exists := unnecessaryResources[gvr.Resource]; exists {
-						config.ClxLogger.Debug("Failed to list resources for", "resource", gvr.Resource, "error", k8serr)
+						config.Logger.Debugf("Failed to list resources for", "resource", gvr.Resource, "error", k8serr)
 					} else {
-						config.ClxLogger.Warn("Failed to list resources for", "resource", gvr.Resource, "error", k8serr)
+						config.Logger.Warnf("Failed to list resources for", "resource", gvr.Resource, "error", k8serr)
 					}
 					break
 				}
 				if k8sResources == nil || len(k8sResources.Items) == 0 {
-					config.ClxLogger.Info("No resources found for GVR", "gvr", gvr)
+					config.Logger.Infof("No resources found for GVR", "gvr", gvr)
 					break
 				}
 
@@ -229,7 +231,7 @@ func (c *K8sClient) GetAllImages(ctx context.Context, namespaceList []string) ([
 		if err != nil {
 			return nil, fmt.Errorf("failed to list pods: %w", err)
 		}
-		config.ClxLogger.Info("Listing pods", "namespace", namespace)
+		config.Logger.Infof("Listing pods", "namespace", namespace)
 		for _, pod := range pods.Items {
 			ownerReferenceSet := set.Set[string]{}
 			if len(pod.OwnerReferences) == 0 {
@@ -294,7 +296,7 @@ func getPrimaryOwnerReference(k *K8sClient, ownerRefs []metav1.OwnerReference, o
 			// Retrieve the ReplicaSet
 			replicaSet, err := k.Client.AppsV1().ReplicaSets(namespace).Get(context.TODO(), replicaSetName, metav1.GetOptions{})
 			if err != nil {
-				config.ClxLogger.Info(fmt.Sprintf("Error retrieving Replicaset %v", err))
+				config.Logger.Infof(fmt.Sprintf("Error retrieving Replicaset %v", err))
 				return
 			}
 
@@ -310,7 +312,7 @@ func getPrimaryOwnerReference(k *K8sClient, ownerRefs []metav1.OwnerReference, o
 			job, err := k.Client.BatchV1().Jobs(namespace).Get(context.TODO(), jobName, metav1.GetOptions{})
 
 			if err != nil {
-				config.ClxLogger.Info(fmt.Sprintf("Error retrieving Job %v", err))
+				config.Logger.Infof(fmt.Sprintf("Error retrieving Job %v", err))
 				return
 			}
 
@@ -328,7 +330,7 @@ func updateImageInComponentList(namespace string, component *model.Component) {
 	if exists {
 		prop.InsertValue(namespace)
 	} else {
-		log.Fatalf("Could not find property 'clx:k8s:namespace'")
+		//log.Fatalf("Could not find property 'clx:k8s:namespace'")
 	}
 }
 
@@ -344,7 +346,7 @@ func addImageToComponentList(container ContainerLike, namespace string, k8sResou
 			if strings.Contains(imageId, sha256) {
 				imageSha = fmt.Sprintf("%s%s", sha256, strings.Split(imageId, sha256)[1])
 			} else {
-				config.ClxLogger.Error("SHA256 digest not found", "imageId", imageId)
+				config.Logger.Errorf("SHA256 digest not found", "imageId", imageId)
 			}
 			break
 		}
@@ -369,7 +371,7 @@ func addImageToComponentList(container ContainerLike, namespace string, k8sResou
 	addPropertiesForImageComponent(component, imageSha)
 
 	*k8sResourceList = append(*k8sResourceList, component)
-	config.ClxLogger.Debug("Created new image for resource:", "name", container.GetImage(), "kind", "Image", "namespace", namespace)
+	config.Logger.Debugf("Created new image for resource:", "name", container.GetImage(), "kind", "Image", "namespace", namespace)
 	return component
 }
 
@@ -385,7 +387,7 @@ func mapToVariadicString(set set.Set[string]) []string {
 func addPropertiesForImageComponent(imageComponent *model.Component, imageSha string) {
 	ref, err := name.ParseReference(imageComponent.Name)
 	if err != nil {
-		config.ClxLogger.Error("No reference found for Image", "name", imageComponent.Name, "error", err)
+		config.Logger.Errorf("No reference found for Image", "name", imageComponent.Name, "error", err)
 	} else {
 		imageComponent.Version = ref.Identifier()
 		imageComponent.Name = strings.Split(ref.Name(), ":")[0]
@@ -412,7 +414,7 @@ func addToComponentList(item unstructured.Unstructured, k8sResourceList *[]model
 	addVersionForComponent(item, &component, "clx:k8s:componentVersion")
 	component.PackageURL = GetAppPkgId(item.GetKind(), item.GetName(), item.GetNamespace(), item.GetAPIVersion())
 	*k8sResourceList = append(*k8sResourceList, component)
-	config.ClxLogger.Debug("Created new component for resource:", "name", item.GetName(), "kind", item.GetKind(), "namespace", item.GetNamespace())
+	config.Logger.Debugf("Created new component for resource:", "name", item.GetName(), "kind", item.GetKind(), "namespace", item.GetNamespace())
 }
 
 func GetAppPkgId(kind string, name string, namespace string, apiVersion string) string {
@@ -437,7 +439,7 @@ func addVersionForComponent(item unstructured.Unstructured, component *model.Com
 		componentSpec, ok := item.Object["spec"].(map[string]interface{})
 		componentVersion, err := componentSpec["version"].(string)
 		if !ok || !err {
-			log.Println("Fetching version from label helm.sh/chart ")
+			//log.Println("Fetching version from label helm.sh/chart ")
 			addLabelIfExists(item, "helm.sh/chart", component, "clx:k8s:componentVersion")
 		} else {
 			component.AddProperty(key, componentVersion)
@@ -464,7 +466,7 @@ func addLabelIfExists(item unstructured.Unstructured, label string, component *m
 	// Ensure it's a string before returning
 	labelValueStr, valid := labelValue.(string)
 	if !valid {
-		config.ClxLogger.Error("Error: label is not a string for item", "label", label, "item", item.GetName())
+		config.Logger.Errorf("Error: label is not a string for item", "label", label, "item", item.GetName())
 		return
 	}
 

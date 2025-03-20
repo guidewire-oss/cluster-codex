@@ -8,11 +8,11 @@ import (
 	prettyjson "encoding/json"
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/apimachinery/pkg/version"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,6 +24,7 @@ var (
 	outPath    string
 	filterPath string
 	sort       bool
+	//logger     config.ClxLogger
 )
 
 var GenerateCmd = &cobra.Command{
@@ -40,33 +41,34 @@ func init() {
 }
 
 func runGenerate(cmd *cobra.Command, _ []string) error {
-	config.ClxLogger.Info("Starting generate command\n")
+	config.Logger.Infof("Starting generate command\n")
 	start := time.Now()
 
 	// Read filter file, if any.
 	var err error
 	err = getInclusionFilter()
 	if err != nil {
-		//config.ClxLogger.Error("Error loading filter file", "error", err)
+		//config.Logger.Errorf("Error loading filter file", "error", err)
 		//os.Exit(1)
-		config.ClxLogger.Error("Error loading filter file", "error", err)
-		log.Fatalf("Error loading filter file: %v", err)
+
+		//config.Logger.Errorf("Error loading filter file", err)
+		//log.Fatal("Error loading filter file: ", err)
 	}
 
 	k8sClient, err := k8.GetClient()
 
 	if err != nil {
-		config.ClxLogger.Error("Error creating Kubernetes client: %v", "error", err)
+		config.Logger.Errorf("Error creating Kubernetes client: %v", "error", err)
 		os.Exit(1)
 	}
 	var serverVersion *version.Info
 	serverVersion, err = k8sClient.Client.Discovery().ServerVersion()
 	if err != nil {
-		config.ClxLogger.Error("Failed to get server version: %v", "error", err)
+		config.Logger.Errorf("Failed to get server version: %v", "error", err)
 		os.Exit(1)
 	}
 
-	config.ClxLogger.Info("Git:", "Version", serverVersion.String())
+	config.Logger.Infof("Git:", "Version", serverVersion.String())
 
 	bom := GenerateBOM(k8sClient)
 
@@ -90,7 +92,7 @@ func runGenerate(cmd *cobra.Command, _ []string) error {
 func writeJson(bom *model.BOM) error {
 	err := ValidatePath(outPath)
 	if err != nil {
-		log.Fatalf("Error validating path: %v", err)
+		//log.Fatalf("Error validating path: %v", err)
 	}
 	file, err := os.Create(outPath)
 	if err != nil {
@@ -104,7 +106,7 @@ func writeJson(bom *model.BOM) error {
 	encoder.SetIndent("", "  ") // Equivalent to MarshalIndent
 
 	if err := encoder.Encode(bom); err != nil {
-		log.Fatalf("Got error converting to json %v", err)
+		//log.Fatalf("Got error converting to json %v", err)
 	}
 	return err
 }
@@ -116,7 +118,7 @@ func GenerateBOM(k8client k8.K8sClientInterface) *model.BOM {
 
 	componentList, namespaces, err := k8client.GetAllComponents(ctx)
 	if err != nil {
-		config.ClxLogger.Error("Error getting resources.", "error", err)
+		config.Logger.Errorf("Error getting resources.", "error", err)
 		return nil // Handle error case by returning nil BOM or some default value
 	}
 	bom.Components = componentList
@@ -128,7 +130,7 @@ func GenerateBOM(k8client k8.K8sClientInterface) *model.BOM {
 
 	componentList, err = k8client.GetAllImages(ctx, namespaceList)
 	if err != nil {
-		config.ClxLogger.Error("Error getting images.", "error", err)
+		config.Logger.Errorf("Error getting images.", "error", err)
 		return nil // Handle error case by returning nil BOM or some default value
 	}
 	bom.Components = append(bom.Components, componentList...)
@@ -162,8 +164,16 @@ func getInclusionFilter() error {
 	if filterPath != "" {
 		// Check if file exists
 		if _, err := os.Stat(filterPath); os.IsNotExist(err) {
-			config.ClxLogger.Error("file does not exist", "filterPath file path", filterPath)
-			log.Fatalf("file does not exist: %s", err)
+			//config.Logger.Errorf("file does not exist", "filterPath file path", filterPath)
+			//log.Fatalf("file does not exist: %s", err)
+			log.Trace().Msg("test...")
+			log.Debug().Msg("test...")
+			log.Info().Msg("test...")
+			log.Warn().Msg("test...")
+			log.Error().Msg("test...")
+			log.Fatal().Str("file", filterPath).Msg("File does not exist")
+
+			//log.Fatal().Any("file does not exist:", err)
 		}
 
 		// Read file contents
