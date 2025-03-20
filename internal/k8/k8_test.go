@@ -3,6 +3,7 @@ package k8_test
 import (
 	"cluster-codex/internal/k8"
 	"cluster-codex/internal/model"
+	"cluster-codex/internal/utils"
 	"context"
 	"fmt"
 	. "github.com/onsi/ginkgo/v2"
@@ -312,7 +313,7 @@ var _ = Describe("Kubernetes - Unit", Label("unit"), func() {
 				Expect(componentMap).To(HaveKey("deployment-1"))
 
 				// Assert only if Namespace Kind is included in the NonNamespacedInclusion
-				if len(nonNamespacedResources) == 0 || k8.Contains(nonNamespacedResources, "Namespace") {
+				if len(nonNamespacedResources) == 0 || utils.Contains(nonNamespacedResources, "Namespace") {
 					Expect(componentMap).To(HaveKey("default"))     // Namespace
 					Expect(componentMap).To(HaveKey("kube-system")) // Namespace
 					// ✅ Check for namespace handling
