@@ -9,13 +9,9 @@
       "namespaces": [
         "test-ns",
         "*"
-      ],
-      "resources": [
-        "Deployment"
       ]
     },
     {
-      
       "resources": [
         "Pod"
       ]

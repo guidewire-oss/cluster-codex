@@ -179,35 +179,41 @@ func getInclusionFilter() error {
 			return fmt.Errorf("failed to parse JSON: %v", err)
 		}
 
+		//for idx, inclusion := range filter.NamespacedInclusions {
+		//	//set default namespace to "*" if it's not provided in the filter'
+		//	if (inclusion.Namespaces == nil) && len(inclusion.Namespaces) == 0 {
+		//		filter.NamespacedInclusions[idx].Namespaces = []string{"*"}
+		//	}
+		//	// Convert Resources to lowercase
+		//	for j, resource := range inclusion.Resources {
+		//		filter.NamespacedInclusions[idx].Resources[j] = strings.ToLower(resource)
+		//	}
+		//}
+
+		// The below logic is to detect
+		// * if the namespace is "*" and the corresponding resource array is empty considered for all resources for all namespaces.
+		// * if the namespace is "*" and the corresponding resource array is NOT empty the namespace or that inclusion set to "*" which means query the specific resources in all namespaces
 		for idx, inclusion := range filter.NamespacedInclusions {
 			//set default namespace to "*" if it's not provided in the filter'
 			if (inclusion.Namespaces == nil) && len(inclusion.Namespaces) == 0 {
 				filter.NamespacedInclusions[idx].Namespaces = []string{"*"}
 			}
-			// Convert Resources to lowercase
-			for j, resource := range inclusion.Resources {
-				filter.NamespacedInclusions[idx].Resources[j] = strings.ToLower(resource)
-			}
-		}
-
-		setFilter := true
-		// The below logic is to detect
-		// * if the namespace is "*" and the corresponding resource array is empty considered for all resources for all namespaces.
-		// * if the namespace is "*" and the corresponding resource array is NOT empty the namespace or that inclusion set to "*" which means query the specific resources in all namespaces
-		for idx, inclusion := range filter.NamespacedInclusions {
 			for j, _ := range inclusion.Namespaces {
 				if filter.NamespacedInclusions[idx].Namespaces[j] == "*" {
 					filter.NamespacedInclusions[idx].Namespaces = []string{"*"}
 					if len(filter.NamespacedInclusions[idx].Resources) == 0 {
-						setFilter = false
+						// If resource array is empty, consider all resources for all namespaces
+						filter.NamespacedInclusions[idx].Resources = []string{"*"}
+					}
+					// Convert Resources to lowercase
+					for k, resource := range inclusion.Resources {
+						filter.NamespacedInclusions[idx].Resources[k] = strings.ToLower(resource)
 					}
 					break
 				}
 			}
 		}
-		if setFilter {
-			k8.K8Filter = filter
-		}
+		k8.K8Filter = filter
 	}
 	return nil
 }
