@@ -398,7 +398,8 @@ var _ = Describe("Kubernetes - Unit", Label("unit"), func() {
 			Entry("Specific Test Namespaces", mockNamespaceList, 8, true, []string{}),
 			Entry("Specific Test Namespace", []string{"default"}, 6, false, []string{}),
 			Entry("Specific Test Namespace and Non-namespaced resources", []string{"default"}, 6, false, []string{"Namespace", "PersistentVolume"}),
-			Entry("Specific Test Namespace and Non-namespaced resources (not Namespace)", []string{"default"}, 4, false, []string{"PersistentVolume"}),
+			Entry("Specific Test Namespace and Non-namespaced resources (not including `Namespace`)", []string{"default"}, 4, false, []string{"PersistentVolume"}),
+			Entry("Specific Test Namespace and Non-namespaced resources (All)", []string{"default"}, 6, false, []string{"*"}),
 		)
 	})
 

@@ -157,6 +157,7 @@ func ValidatePath(filePath string) error {
 // TODO: Add non-namespaced as well
 func getInclusionFilter() error {
 	//k8.K8Filter = &model.Inclusions{Inclusions: []model.Inclusion{{Namespaces: []string{""}}}}
+	//var filter = model.Filter{NamespacedInclusions: []model.NamespacedInclusion{{Namespaces: []string{"*"}}}}
 
 	if filterPath != "" {
 		// Check if file exists
@@ -179,6 +180,10 @@ func getInclusionFilter() error {
 		}
 
 		for idx, inclusion := range filter.NamespacedInclusions {
+			//set default namespace to "*" if it's not provided in the filter'
+			if (inclusion.Namespaces == nil) && len(inclusion.Namespaces) == 0 {
+				filter.NamespacedInclusions[idx].Namespaces = []string{"*"}
+			}
 			// Convert Resources to lowercase
 			for j, resource := range inclusion.Resources {
 				filter.NamespacedInclusions[idx].Resources[j] = strings.ToLower(resource)

@@ -3,6 +3,7 @@ package k8
 import (
 	"cluster-codex/internal/config"
 	"cluster-codex/internal/model"
+	"cluster-codex/internal/utils"
 	"context"
 	"fmt"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -52,7 +53,7 @@ type ContainerWrapper struct {
 
 var K8Filter model.Filter
 
-//var K8Filter = &model.Filter{NamespacedInclusions: []model.NamespacedInclusion{{Namespaces: []string{""}}}}
+//var K8Filter = &model.Filter{NamespacedInclusions: []model.NamespacedInclusion{{Namespaces: []string{"*"}}}}
 
 func (c ContainerWrapper) GetName() string  { return c.Name }
 func (c ContainerWrapper) GetImage() string { return c.Image }
@@ -190,14 +191,18 @@ func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, []
 					if item.GetKind() == "Namespace" {
 						namespaces = append(namespaces, item.GetName())
 					}
-					if !K8Filter.IsAllNamespacesFilter() {
-						if namespace != "" && !Contains(K8Filter.GetNamespaceList(), namespace) {
-							continue
-						}
+					// If user specified a filter for namespace and if the current item's namespace is not in the filter
+					//if !K8Filter.IncludesAllNamespaces() {
+					//	if namespace != "" && !utils.Contains(K8Filter.GetNamespaceList(), namespace) {
+					//		continue
+					//	}
+					//}
+					if namespace != "" && !K8Filter.ShouldIncludesThisResource(namespace, item.GetKind()) {
+						continue
 					}
 					//TODO: if no filter
-					if !K8Filter.IsNonNamespacedAllKinds() {
-						if namespace == "" && !Contains(K8Filter.NonNamespacedInclusions.Resources, item.GetKind()) {
+					if !K8Filter.IncludesAllKindsNonNamespaced() {
+						if namespace == "" && !utils.Contains(K8Filter.NonNamespacedInclusions.Resources, item.GetKind()) {
 							continue
 						}
 					}
@@ -214,15 +219,6 @@ func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, []
 		}
 	}
 	return k8sResourceList, namespaces, nil
-}
-
-func Contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
 }
 
 func (c *K8sClient) GetAllImages(ctx context.Context, namespaceList []string) ([]model.Component, error) {
