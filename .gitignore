@@ -60,3 +60,5 @@ Thumbs.db
 ######################
 filter*.json
 output*.json
+# Added by goreleaser init:
+dist/
