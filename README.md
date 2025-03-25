@@ -32,19 +32,18 @@ Available Commands:
 `clx generate` generates a BOM file for your Kubernetes cluster.
 
 ```sh
-clx generate [flags]
-```
+Usage:
+  clx generate [flags]
 
-Optional flags include:
-
-```plain
 Flags:
-  -f, --format string       [optional] cyclonedx-json (default "cyclonedx-json")
-  -o, --out-path string     [optional] Path to write generated file to. (default ./output.json)
-  -f, --filter-path string  [optional] Path to a json file containing filterPath.
-  -h, --help                [optional] help for generate
-  -l, --log-level string    [optional] Set the logging level (debug, info, warn, error) (default "warn")
+  -i, --filter-path string   Path to a json file containing inclusion filterPath.
+  -f, --format string        Format of the generated BOM. (default "cyclonedx-json")
+  -h, --help                 help for generate
+  -o, --out-path string      Path and filename of generated cluster codex file. (default "./output.json")
+  -s, --sort                 Sort the generated BOM JSON in Application, Kind, Name, Namespace order
 
+Global Flags:
+  -l, --log-level string   Set the logging level (debug, info, warn, error) (default "warn")
 ```
 
 ### Filters
