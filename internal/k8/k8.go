@@ -219,32 +219,32 @@ func (c *K8sClient) GetAllImages(ctx context.Context, namespaceList []string) ([
 
 			containerStatuses := pod.Status.ContainerStatuses
 			for _, container := range pod.Spec.Containers {
-				if c, exists := imageNameMap[container.Image]; exists {
-					updateImageInComponentList(namespace, c)
-				} else {
-					component := addImageToComponentList(ContainerWrapper{container}, namespace, &componentList, containerStatuses, "main", ownerReferenceSet)
-					imageNameMap[container.Image] = component
-				}
+				//if c, exists := imageNameMap[container.Image]; exists {
+				//	updateImageInComponentList(namespace, c)
+				//} else {
+				component := addImageToComponentList(ContainerWrapper{container}, namespace, &componentList, containerStatuses, "main", ownerReferenceSet)
+				imageNameMap[container.Image] = component
+				//}
 			}
 
 			initContainerStatuses := pod.Status.InitContainerStatuses
 			for _, container := range pod.Spec.InitContainers {
-				if c, exists := imageNameMap[container.Image]; exists {
-					updateImageInComponentList(namespace, c)
-				} else {
-					component := addImageToComponentList(ContainerWrapper{container}, namespace, &componentList, initContainerStatuses, "init", ownerReferenceSet)
-					imageNameMap[container.Image] = component
-				}
+				//if c, exists := imageNameMap[container.Image]; exists {
+				//	updateImageInComponentList(namespace, c)
+				//} else {
+				component := addImageToComponentList(ContainerWrapper{container}, namespace, &componentList, initContainerStatuses, "init", ownerReferenceSet)
+				imageNameMap[container.Image] = component
+				//}
 			}
 
 			ephemeralContainerStatuses := pod.Status.EphemeralContainerStatuses
 			for _, container := range pod.Spec.EphemeralContainers {
-				if c, exists := imageNameMap[container.Image]; exists {
-					updateImageInComponentList(namespace, c)
-				} else {
-					component := addImageToComponentList(EphemeralContainerWrapper{container}, namespace, &componentList, ephemeralContainerStatuses, "ephemeral", ownerReferenceSet)
-					imageNameMap[container.Image] = component
-				}
+				//if c, exists := imageNameMap[container.Image]; exists {
+				//	updateImageInComponentList(namespace, c)
+				//} else {
+				component := addImageToComponentList(EphemeralContainerWrapper{container}, namespace, &componentList, ephemeralContainerStatuses, "ephemeral", ownerReferenceSet)
+				imageNameMap[container.Image] = component
+				//}
 			}
 		}
 	}
@@ -364,7 +364,7 @@ func addPropertiesForImageComponent(imageComponent *model.Component, imageSha st
 		imageComponent.Version = ref.Identifier()
 		imageComponent.Name = strings.Split(ref.Name(), ":")[0]
 	}
-	imageComponent.PackageURL = PkgID(imageComponent.Name, imageComponent.Version, imageSha, ref.Context().RepositoryStr())
+	imageComponent.PackageURL = PkgID(imageComponent, imageSha, ref.Context().RepositoryStr())
 }
 
 func addToComponentList(item unstructured.Unstructured, k8sResourceList *[]model.Component) {
@@ -443,18 +443,19 @@ func addLabelIfExists(item unstructured.Unstructured, label string, component *m
 	component.AddProperty(propertyKey, labelValueStr)
 }
 
-func PkgID(componentName string, imageVersion string, imageSha string, baseUrl string) string {
+func PkgID(component *model.Component, imageSha string, baseUrl string) string {
 	baseName := fmt.Sprintf("%s:%s/%s", model.PkgPrefix, model.OciPrefix, baseUrl)
 
 	urlValues := url.Values{
-		"repository_url": []string{componentName},
+		"repository_url": []string{component.Name},
 	}
 
-	urlValues.Add("version", imageVersion)
+	urlValues.Add("version", component.Version)
+	urlValues.Add("namespace", component.GetNamespace())
 	if imageSha != "" {
 		baseName = fmt.Sprintf("%s@%s", baseName, imageSha)
 	}
 
-	//Format:  pkg:oci/{imageName}/{@ImageSha}?repository_url={repourl}&version={version}
+	//Format:  pkg:oci/{imageName}/{@ImageSha}?repository_url={repourl}&version={version}&namespace={namespace}
 	return fmt.Sprintf("%s?%s", baseName, urlValues.Encode())
 }

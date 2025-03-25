@@ -1,22 +1,25 @@
 {
   "non-namespaced-inclusions": {
     "resources": [
-      "Node"
+      ""
     ]
   },
   "namespaced-inclusions": [
     {
       "namespaces": [
-        "test-ns",
-        "*"
+        "atmos-monitoring",
+        "atmos-system",
+        "crossplane-system",
+        "flux-system",
+        "keda-system",
+        "kpack-system",
+        "kube-system",
+        "oort-system",
+        "oort-ctl-system",
+        "vela-system"
       ],
       "resources": [
-        "HelmRelease"
-      ]
-    },
-    {
-      "resources": [
-        "Deployment"
+        "HelmChart"
       ]
     }
   ]

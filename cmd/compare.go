@@ -143,7 +143,6 @@ func ExtractBOMToMap(data *unstructured.Unstructured, dataType string) map[strin
 		kbomType := component["type"].(string)
 		purl := component["purl"].(string)
 		properties := component["properties"].([]interface{})
-
 		if kbomType == dataType {
 			for _, props := range properties {
 				itemKey := props.(map[string]interface{})["name"].(string)
