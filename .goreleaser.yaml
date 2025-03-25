@@ -44,7 +44,8 @@ changelog:
       - "^test:"
 
 brews:
-  - repository:
+  - name: clx
+    repository:
       owner: guidewire-oss
       name: homebrew-tap
     directory: Formula
