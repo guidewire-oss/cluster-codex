@@ -1,10 +1,23 @@
 {
-  "inclusions": [
+  "non-namespaced-inclusions": {
+    "resources": [
+      "Node"
+    ]
+  },
+  "namespaced-inclusions": [
     {
-      "namespace": "namespace-one"
+      "namespaces": [
+        "test-ns",
+        "*"
+      ],
+      "resources": [
+        "HelmRelease"
+      ]
     },
     {
-      "namespace": "namespace-two"
+      "resources": [
+        "Deployment"
+      ]
     }
   ]
 }

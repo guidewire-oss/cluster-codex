@@ -1,32 +1,25 @@
 package config
 
 import (
-	"log/slog"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"os"
-	"strings"
 )
 
-var ClxLogger *slog.Logger
-
 func ConfigureLogger(level string) {
-	var logLevel slog.Level
+	consoleWriter := zerolog.ConsoleWriter{Out: os.Stderr, PartsExclude: []string{"time"}}
 
-	switch strings.ToLower(level) {
-	case "debug":
-		logLevel = slog.LevelDebug
-	case "info":
-		logLevel = slog.LevelInfo
-	case "warn", "warning":
-		logLevel = slog.LevelWarn
+	log.Logger = zerolog.New(consoleWriter).With().Logger()
+	switch level {
 	case "error":
-		logLevel = slog.LevelError
-	default:
-		logLevel = slog.LevelWarn
+		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	case "warn", "warning":
+		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+	case "info":
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	case "debug":
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	case "trace":
+		zerolog.SetGlobalLevel(zerolog.TraceLevel)
 	}
-
-	// Configure slog with the chosen log level
-	ClxLogger = slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-		Level: logLevel,
-	}))
-	slog.SetDefault(ClxLogger)
 }

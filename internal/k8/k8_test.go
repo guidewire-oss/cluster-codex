@@ -1,9 +1,12 @@
 package k8_test
 
 import (
+	"cluster-codex/cmd"
 	"cluster-codex/internal/k8"
 	"cluster-codex/internal/model"
+	"cluster-codex/internal/utils"
 	"context"
+	"encoding/json"
 	"fmt"
 	. "github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
@@ -21,17 +24,19 @@ import (
 
 // ✅ Defines all commonly used GVRs
 var gvrs = map[string]schema.GroupVersionResource{
-	"pods":        {Group: "", Version: "v1", Resource: "pods"},
-	"services":    {Group: "", Version: "v1", Resource: "services"},
-	"deployments": {Group: "apps", Version: "v1", Resource: "deployments"},
-	"namespaces":  {Group: "", Version: "v1", Resource: "namespaces"},
+	"pods":              {Group: "", Version: "v1", Resource: "pods"},
+	"services":          {Group: "", Version: "v1", Resource: "services"},
+	"deployments":       {Group: "apps", Version: "v1", Resource: "deployments"},
+	"namespaces":        {Group: "", Version: "v1", Resource: "namespaces"},
+	"persistentvolumes": {Group: "", Version: "v1", Resource: "persistentvolumes"},
 }
 
 var kinds = map[string]string{
-	"pods":        "Pod",
-	"services":    "Service",
-	"deployments": "Deployment",
-	"namespaces":  "Namespace",
+	"pods":              "Pod",
+	"services":          "Service",
+	"deployments":       "Deployment",
+	"namespaces":        "Namespace",
+	"persistentvolumes": "PersistentVolume",
 }
 
 // ✅ Generates mock Kubernetes resources dynamically
@@ -127,10 +132,11 @@ var _ = Describe("Kubernetes - Unit", Label("unit"), func() {
 		fakeDynamicClient = dynamicfakeclient.NewSimpleDynamicClientWithCustomListKinds(
 			runtime.NewScheme(),
 			map[schema.GroupVersionResource]string{
-				gvrs["pods"]:        "PodList",
-				gvrs["services"]:    "ServiceList",
-				gvrs["deployments"]: "DeploymentList",
-				gvrs["namespaces"]:  "NamespaceList",
+				gvrs["pods"]:              "PodList",
+				gvrs["services"]:          "ServiceList",
+				gvrs["deployments"]:       "DeploymentList",
+				gvrs["namespaces"]:        "NamespaceList",
+				gvrs["persistentvolumes"]: "PersistentvolumesList",
 			},
 		)
 
@@ -139,6 +145,7 @@ var _ = Describe("Kubernetes - Unit", Label("unit"), func() {
 		mockPods2 := createMockResources("pods", []string{"pod-3", "pod-4"}, "kube-system")
 		mockDeployments := createMockResources("deployments", []string{"deployment-1"}, "default")
 		mockNamespaces := createMockResources("namespaces", mockNamespaceList, "")
+		mockPersistentVolumes := createMockResources("persistentvolumes", []string{"pv-1"}, "")
 
 		// ✅ Add mock objects to FakeDynamicClient tracker
 		for _, pod := range mockPods {
@@ -155,6 +162,10 @@ var _ = Describe("Kubernetes - Unit", Label("unit"), func() {
 		}
 		for _, namespace := range mockNamespaces {
 			_, err := fakeDynamicClient.Resource(gvrs["namespaces"]).Create(context.TODO(), &namespace, v1.CreateOptions{})
+			gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		}
+		for _, pv := range mockPersistentVolumes {
+			_, err := fakeDynamicClient.Resource(gvrs["persistentvolumes"]).Create(context.TODO(), &pv, v1.CreateOptions{})
 			gomega.Expect(err).ToNot(gomega.HaveOccurred())
 		}
 
@@ -251,6 +262,7 @@ var _ = Describe("Kubernetes - Unit", Label("unit"), func() {
 						{Name: "pods", Namespaced: true, Kind: "Pod"},
 						{Name: "services", Namespaced: true, Kind: "Service"},
 						{Name: "namespaces", Namespaced: false, Kind: "Namespace"},
+						{Name: "persistentvolumes", Namespaced: false, Kind: "PersistentVolume"},
 					},
 				},
 				{
@@ -274,22 +286,20 @@ var _ = Describe("Kubernetes - Unit", Label("unit"), func() {
 
 	Context("when GetAllComponents is called with a K8s client", func() {
 		DescribeTable("should return all the components in the cluster",
-			func(namespaces []string, expectedComponents int, includeKubeSystem bool) {
+			func(namespaces []string, expectedComponents int, includeKubeSystem bool, nonNamespacedResources []string) {
 				// Setup the filter with the namespaces
-				var ctx context.Context
-				if len(namespaces) == 0 {
-					ctx = context.Background()
-				} else {
-					ctx = context.WithValue(context.Background(), k8.FilterKey, k8.K8sFilter{
-						Namespaces: namespaces,
-					})
+				k8.K8Filter = model.Filter{
+					NamespacedInclusions:    []model.NamespacedInclusion{{Namespaces: namespaces}},
+					NonNamespacedInclusions: model.NonNamespacedInclusions{Resources: nonNamespacedResources},
 				}
 
-				components, err := fakeK8sClient.GetAllComponents(ctx)
+				cmd.InitializeFilterStruct(&k8.K8Filter)
+
+				components, namespaces, err := fakeK8sClient.GetAllComponents(context.Background())
 
 				Expect(err).To(BeNil())
-				// ✅ Assert correct number of components (Pods + Deployments + Namespaces)
-				Expect(len(components)).To(Equal(expectedComponents)) // pod-1, pod-2, pod-3, pod-4, deployment-1, default, kube-system
+				// ✅ Assert correct number of components (Pods + Deployments + Namespaces + PersistentVolumes)
+				Expect(len(components)).To(Equal(expectedComponents)) // pod-1, pod-2, pod-3, pod-4, deployment-1, default, kube-system, pv-1
 
 				// ✅ Convert list into a map for easy lookup
 				componentMap := make(map[string]model.Component)
@@ -305,8 +315,31 @@ var _ = Describe("Kubernetes - Unit", Label("unit"), func() {
 					Expect(componentMap).To(HaveKey("pod-4"))
 				}
 				Expect(componentMap).To(HaveKey("deployment-1"))
-				Expect(componentMap).To(HaveKey("default"))     // Namespace
-				Expect(componentMap).To(HaveKey("kube-system")) // Namespace
+
+				// Assert only if Namespace Kind is included in the NonNamespacedInclusion
+				if len(nonNamespacedResources) == 0 || utils.Contains(nonNamespacedResources, "Namespace") {
+					Expect(componentMap).To(HaveKey("default"))     // Namespace
+					Expect(componentMap).To(HaveKey("kube-system")) // Namespace
+					// ✅ Check for namespace handling
+					Expect(componentMap["default"].Type).To(Equal("application"))
+					if includeKubeSystem {
+						Expect(componentMap["kube-system"].Type).To(Equal("application"))
+					}
+					// ✅ Check properties for Namespaces (They should NOT have a model.ComponentNamespace property)
+					Expect(componentMap["default"].Properties).To(ContainElement(
+						model.Property{Name: model.ComponentKind, Values: []string{"Namespace"}},
+					))
+					Expect(componentMap["default"].Properties).ToNot(ContainElement(
+						model.Property{Name: model.ComponentNamespace, Values: []string{"default"}}, // Namespaces shouldn't have this property
+					))
+
+					Expect(componentMap["kube-system"].Properties).To(ContainElement(
+						model.Property{Name: model.ComponentKind, Values: []string{"Namespace"}},
+					))
+					Expect(componentMap["kube-system"].Properties).ToNot(ContainElement(
+						model.Property{Name: model.ComponentNamespace, Values: []string{"kube-system"}},
+					))
+				}
 
 				// ✅ Assert individual component details
 				Expect(componentMap["pod-1"].Type).To(Equal("application"))
@@ -318,11 +351,10 @@ var _ = Describe("Kubernetes - Unit", Label("unit"), func() {
 				Expect(componentMap["deployment-1"].Name).To(Equal("deployment-1"))
 				Expect(componentMap["deployment-1"].PackageURL).To(Equal(fmt.Sprintf("%s:%s/Deployment/deployment-1?apiVersion=apps%%2Fv1&namespace=default", model.PkgPrefix, model.K8sPrefix)))
 
-				// ✅ Check for namespace handling
-				Expect(componentMap["default"].Type).To(Equal("application"))
-				if includeKubeSystem {
-					Expect(componentMap["kube-system"].Type).To(Equal("application"))
-				}
+				//Assert non-namespaced PersistentVolume
+				Expect(componentMap["pv-1"].Type).To(Equal("application"))
+				Expect(componentMap["pv-1"].Name).To(Equal("pv-1"))
+				Expect(componentMap["pv-1"].PackageURL).To(Equal(fmt.Sprintf("%s:%s/PersistentVolume/pv-1?apiVersion=v1", model.PkgPrefix, model.K8sPrefix)))
 
 				// ✅ Check properties for Pods (Namespace & Kind)
 				Expect(componentMap["pod-1"].Properties).To(ContainElements(
@@ -349,19 +381,12 @@ var _ = Describe("Kubernetes - Unit", Label("unit"), func() {
 					model.Property{Name: model.ComponentNamespace, Values: []string{"default"}},
 				))
 
-				// ✅ Check properties for Namespaces (They should NOT have a model.ComponentNamespace property)
-				Expect(componentMap["default"].Properties).To(ContainElement(
-					model.Property{Name: model.ComponentKind, Values: []string{"Namespace"}},
+				// ✅ Check properties for non namespaced kind PersistentVolume (They Should NOT have ComponentNamespace property)
+				Expect(componentMap["pv-1"].Properties).To(ContainElement(
+					model.Property{Name: model.ComponentKind, Values: []string{"PersistentVolume"}},
 				))
-				Expect(componentMap["default"].Properties).ToNot(ContainElement(
-					model.Property{Name: model.ComponentNamespace, Values: []string{"default"}}, // Namespaces shouldn't have this property
-				))
-
-				Expect(componentMap["kube-system"].Properties).To(ContainElement(
-					model.Property{Name: model.ComponentKind, Values: []string{"Namespace"}},
-				))
-				Expect(componentMap["kube-system"].Properties).ToNot(ContainElement(
-					model.Property{Name: model.ComponentNamespace, Values: []string{"kube-system"}},
+				Expect(componentMap["pv-1"].Properties).ToNot(ContainElement(
+					model.Property{Name: model.ComponentNamespace, Values: []string{"default"}}, // Non-namespaced resources shouldn't have this property
 				))
 
 				// ✅ Ensure no licenses/hashes exist since they were not set in mock data
@@ -374,9 +399,12 @@ var _ = Describe("Kubernetes - Unit", Label("unit"), func() {
 					Expect(found && kind == "Services").ToNot(BeTrue(), "Expected not to find a 'Service', but found one")
 				}
 			},
-			Entry("No Namespaces", []string{}, 7, true),
-			Entry("Specific Test Namespaces", mockNamespaceList, 7, true),
-			Entry("Specific Test Namespace", []string{"default"}, 5, false),
+			Entry("No Namespaces", []string{}, 8, true, []string{}),
+			Entry("Specific Test Namespaces", mockNamespaceList, 8, true, []string{}),
+			Entry("Specific Test Namespace", []string{"default"}, 6, false, []string{}),
+			Entry("Specific Test Namespace and Non-namespaced resources", []string{"default"}, 6, false, []string{"Namespace", "PersistentVolume"}),
+			Entry("Specific Test Namespace and Non-namespaced resources (not including `Namespace`)", []string{"default"}, 4, false, []string{"PersistentVolume"}),
+			Entry("Specific Test Namespace and Non-namespaced resources (All)", []string{"default"}, 6, false, []string{"*"}),
 		)
 	})
 
@@ -440,3 +468,10 @@ var _ = Describe("GetAppPkgId", Label("unit"), func() {
 		Expect(result).To(Equal(expected))
 	})
 })
+
+func loadFilterFromJSON(jsonData string) *model.Filter {
+	var filter model.Filter
+	err := json.Unmarshal([]byte(jsonData), &filter)
+	Expect(err).NotTo(HaveOccurred()) // Ensure JSON is valid
+	return &filter
+}

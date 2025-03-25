@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("GenerateBOM - Integration", Label("integration"), func() {
+var _ = Describe("GenerateBOM - Integration", Label("integration"), Ordered, func() {
 	const testNamespace = "clx-test"
 	var k8client *k8.K8sClient
 	var bom *model.BOM
@@ -24,8 +24,13 @@ var _ = Describe("GenerateBOM - Integration", Label("integration"), func() {
 
 		DescribeTable("should have valid metadata, components and images",
 			func(namespaces []string, findNamespace bool) {
-				bom = GenerateBOM(k8client, namespaces)
+				// Set the filter for the namespaces
+				k8.K8Filter = model.Filter{NamespacedInclusions: []model.NamespacedInclusion{{Namespaces: namespaces}}}
+				InitializeFilterStruct(&k8.K8Filter)
 
+				bom, err = GenerateBOM(k8client)
+
+				Expect(err).To(BeNil())
 				Expect(bom).ToNot(BeNil())
 				Expect(bom.BomFormat).To(Equal("CycloneDX"))
 				Expect(bom.SpecVersion).To(Equal("1.6"))
@@ -42,7 +47,7 @@ var _ = Describe("GenerateBOM - Integration", Label("integration"), func() {
 				components = bom.FindApplications(testNamespace, "Namespace", "")
 				Expect(len(components)).To(BeNumerically("==", 1))
 
-				// Non existent pods never appear.
+				// Non-existent pods never appear.
 				components = bom.FindApplications("non-existent-pod", "Pod", "default")
 				Expect(len(components)).To(BeNumerically("==", 0))
 

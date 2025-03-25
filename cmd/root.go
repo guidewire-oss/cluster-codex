@@ -8,7 +8,6 @@ import (
 )
 
 var logLevel string
-
 var rootCmd = &cobra.Command{
 	Use:   "clx",
 	Short: "clx - Kubernetes Bill of Materials",

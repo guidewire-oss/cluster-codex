@@ -1,9 +1,0 @@
-{
-  "namespaces": [
-    "default",
-    "kube-system"
-  ],
-  "resources": [
-    "HelmChart"
-  ]
-}

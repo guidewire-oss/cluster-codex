@@ -1,11 +1,12 @@
 package k8
 
 import (
-	"cluster-codex/internal/config"
 	"cluster-codex/internal/model"
+	"cluster-codex/internal/utils"
 	"context"
 	"fmt"
 	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/rs/zerolog/log"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,23 +18,14 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/utils/set"
-	"log"
 	"net/url"
 	"os"
 	"strings"
 )
 
-type ContextKey string
-
-const FilterKey ContextKey = "k8sFilter"
-
-type K8sFilter struct {
-	Namespaces []string
-}
-
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . K8sClientInterface
 type K8sClientInterface interface {
-	GetAllComponents(ctx context.Context) ([]model.Component, error)
+	GetAllComponents(ctx context.Context) ([]model.Component, []string, error)
 	GetAllImages(ctx context.Context, namespaceList []string) ([]model.Component, error)
 }
 
@@ -57,6 +49,8 @@ type ContainerLike interface {
 type ContainerWrapper struct {
 	corev1.Container
 }
+
+var K8Filter model.Filter
 
 func (c ContainerWrapper) GetName() string  { return c.Name }
 func (c ContainerWrapper) GetImage() string { return c.Image }
@@ -85,15 +79,15 @@ var unnecessaryResources = map[string]struct{}{
 func GetClient() (*K8sClient, error) {
 
 	kubeConfigPath := os.Getenv("KUBECONFIG")
-	config.ClxLogger.Info("Reading kubeconfig", "path", kubeConfigPath)
+	log.Info().Msgf("Reading kubeconfig path %s", kubeConfigPath)
 
 	if kubeConfigPath == "" {
 		kubeConfigPath = os.Getenv("HOME") + "/.kube/config"
 	}
 	if _, err := os.Stat(kubeConfigPath); os.IsNotExist(err) {
-		log.Fatalf("File does not exist: %s", kubeConfigPath)
+		log.Fatal().Msgf("File does not exist: %s", kubeConfigPath)
 	} else if err != nil {
-		log.Fatalf("Error accessing file: %v", err)
+		log.Fatal().Msgf("Error accessing file: %v", err)
 	}
 
 	config, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
@@ -105,13 +99,13 @@ func GetClient() (*K8sClient, error) {
 	// Create the clientset from the config.
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		log.Printf("Error creating clientset: %v", err)
+		log.Err(err).Msg("Error creating clientset")
 		return nil, err
 	}
 
 	dynamicClient, err := dynamic.NewForConfig(config)
 	if err != nil {
-		log.Printf("Error creating dynamic client: %v", err)
+		log.Err(err).Msg("Error creating dynamic client")
 		return nil, err
 	}
 
@@ -124,22 +118,17 @@ func GetClient() (*K8sClient, error) {
 	// Create discovery client
 	K8sClient.Discovery, err = discovery.NewDiscoveryClientForConfig(config)
 	if err != nil {
-		log.Fatalf("Failed to create discovery client: %v", err)
+		log.Err(err).Msg("Failed to create discovery client")
 	}
 	return K8sClient, nil
 }
 
-func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, error) {
-	// Retrieve the inclusionFilter from context (if provided)
-	var inclusionFilter K8sFilter
-	if val, ok := ctx.Value(FilterKey).(K8sFilter); ok {
-		inclusionFilter = val
-	}
-
+func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, []string, error) {
+	var namespaces []string
 	// Get all API resources
 	apiResourceLists, err := c.Discovery.ServerPreferredResources()
 	if err != nil {
-		log.Fatalf("Failed to list API groups and resources: %v", err)
+		log.Err(err).Msg("Failed to list API groups and resources")
 	}
 
 	var k8sResourceList []model.Component
@@ -147,11 +136,11 @@ func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, er
 	for _, resourceList := range apiResourceLists {
 		gv, err := schema.ParseGroupVersion(resourceList.GroupVersion)
 		if err != nil {
-			log.Fatalf("Could not retrieve group version %v", err)
+			log.Err(err).Msg("Could not retrieve group version")
 		}
 		// First, go through all the non namespaced resources, store them, and get the list of namespaces
 		for _, resource := range resourceList.APIResources {
-			config.ClxLogger.Info("Processing resource", "resource", resource.Name)
+			log.Info().Msgf("Processing resource: %s", resource.Name)
 			gvr := schema.GroupVersionResource{
 				Group:    gv.Group,
 				Version:  gv.Version,
@@ -167,21 +156,30 @@ func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, er
 				k8sResources, k8serr := c.DynamicClient.Resource(gvr).List(ctx, listOptions)
 				if k8serr != nil {
 					if _, exists := unnecessaryResources[gvr.Resource]; exists {
-						config.ClxLogger.Debug("Failed to list resources for", "resource", gvr.Resource, "error", k8serr)
+						log.Debug().Msgf("Failed to list resources for less common resource: %v - error: %v", gvr.Resource, k8serr)
 					} else {
-						config.ClxLogger.Warn("Failed to list resources for", "resource", gvr.Resource, "error", k8serr)
+						log.Warn().Msgf("Failed to list resources for resource: %v - error: %v", gvr.Resource, k8serr)
 					}
 					break
 				}
 				if k8sResources == nil || len(k8sResources.Items) == 0 {
-					config.ClxLogger.Info("No resources found for GVR", "gvr", gvr)
+					log.Debug().Msgf("No resources found for GVR: %v", gvr)
 					break
 				}
+
 				for _, item := range k8sResources.Items {
-					// Apply Namespace inclusionFilter (if specified)
-					if len(inclusionFilter.Namespaces) > 0 {
-						namespace := item.GetNamespace()
-						if namespace != "" && !contains(inclusionFilter.Namespaces, namespace) {
+					namespace := item.GetNamespace()
+					if item.GetKind() == "Namespace" {
+						namespaces = append(namespaces, item.GetName())
+					}
+					// For namespaced resources check based on the filter
+					if namespace != "" && !K8Filter.ShouldIncludeThisResource(namespace, item.GetKind()) {
+						continue
+					}
+
+					// For non-namespaced resources
+					if !K8Filter.IncludesAllKindsNonNamespaced() {
+						if namespace == "" && !utils.Contains(K8Filter.NonNamespacedInclusions.Resources, item.GetKind()) {
 							continue
 						}
 					}
@@ -196,17 +194,7 @@ func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, er
 			}
 		}
 	}
-
-	return k8sResourceList, nil
-}
-
-func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
+	return k8sResourceList, namespaces, nil
 }
 
 func (c *K8sClient) GetAllImages(ctx context.Context, namespaceList []string) ([]model.Component, error) {
@@ -217,12 +205,11 @@ func (c *K8sClient) GetAllImages(ctx context.Context, namespaceList []string) ([
 		if err != nil {
 			return nil, fmt.Errorf("failed to list pods: %w", err)
 		}
-		config.ClxLogger.Info("Listing pods", "namespace", namespace)
+		log.Info().Msgf("Listing pods in namespace: %s", namespace)
 		for _, pod := range pods.Items {
 			ownerReferenceSet := set.Set[string]{}
 			if len(pod.OwnerReferences) == 0 {
-				fmt.Printf("No owner reference found for pod %s\n", pod.Name)
-				//continue
+				log.Info().Msgf("No owner reference found for pod: %s", pod.Name)
 			} else {
 				//Special cases for Owner References:
 				//	1. ReplicaSets can be owned by Deployments or custom CRDs
@@ -282,14 +269,13 @@ func getPrimaryOwnerReference(k *K8sClient, ownerRefs []metav1.OwnerReference, o
 			// Retrieve the ReplicaSet
 			replicaSet, err := k.Client.AppsV1().ReplicaSets(namespace).Get(context.TODO(), replicaSetName, metav1.GetOptions{})
 			if err != nil {
-				config.ClxLogger.Info(fmt.Sprintf("Error retrieving Replicaset %v", err))
+				log.Err(err).Msgf("Error retrieving Replicaset: %s", replicaSetName)
 				return
 			}
 
 			if len(replicaSet.OwnerReferences) > 0 {
 				getPrimaryOwnerReference(k, replicaSet.OwnerReferences, ownerReferenceSet, namespace)
 				continue
-				//ownerReferenceKey = fmt.Sprintf("%s/%s", primaryOwnerRef.Kind, primaryOwnerRef.Name)
 			}
 		}
 
@@ -298,7 +284,7 @@ func getPrimaryOwnerReference(k *K8sClient, ownerRefs []metav1.OwnerReference, o
 			job, err := k.Client.BatchV1().Jobs(namespace).Get(context.TODO(), jobName, metav1.GetOptions{})
 
 			if err != nil {
-				config.ClxLogger.Info(fmt.Sprintf("Error retrieving Job %v", err))
+				log.Err(err).Msgf("Error retrieving Job: %s", jobName)
 				return
 			}
 
@@ -316,7 +302,7 @@ func updateImageInComponentList(namespace string, component *model.Component) {
 	if exists {
 		prop.InsertValue(namespace)
 	} else {
-		log.Fatalf("Could not find property 'clx:k8s:namespace'")
+		log.Fatal().Msgf("Could not find property 'clx:k8s:namespace' in component: %v", component)
 	}
 }
 
@@ -332,7 +318,7 @@ func addImageToComponentList(container ContainerLike, namespace string, k8sResou
 			if strings.Contains(imageId, sha256) {
 				imageSha = fmt.Sprintf("%s%s", sha256, strings.Split(imageId, sha256)[1])
 			} else {
-				config.ClxLogger.Error("SHA256 digest not found", "imageId", imageId)
+				log.Error().Msgf("SHA256 digest not found in image: %s - continuing.", imageId)
 			}
 			break
 		}
@@ -357,7 +343,7 @@ func addImageToComponentList(container ContainerLike, namespace string, k8sResou
 	addPropertiesForImageComponent(component, imageSha)
 
 	*k8sResourceList = append(*k8sResourceList, component)
-	config.ClxLogger.Debug("Created new image for resource:", "name", container.GetImage(), "kind", "Image", "namespace", namespace)
+	log.Debug().Msgf("Created new image for resource: %s, kind: image, namespace: %s", container.GetImage(), namespace)
 	return component
 }
 
@@ -373,13 +359,11 @@ func mapToVariadicString(set set.Set[string]) []string {
 func addPropertiesForImageComponent(imageComponent *model.Component, imageSha string) {
 	ref, err := name.ParseReference(imageComponent.Name)
 	if err != nil {
-		config.ClxLogger.Error("No reference found for Image", "name", imageComponent.Name, "error", err)
+		log.Err(err).Msgf("No reference found for Image: %s", imageComponent.Name)
 	} else {
 		imageComponent.Version = ref.Identifier()
 		imageComponent.Name = strings.Split(ref.Name(), ":")[0]
 	}
-	// img, err := remote.Get(ref, remote.WithAuth(authn.Anonymous)) // Use authn.DefaultKeychain for private images
-
 	imageComponent.PackageURL = PkgID(imageComponent.Name, imageComponent.Version, imageSha, ref.Context().RepositoryStr())
 }
 
@@ -400,7 +384,7 @@ func addToComponentList(item unstructured.Unstructured, k8sResourceList *[]model
 	addVersionForComponent(item, &component, "clx:k8s:componentVersion")
 	component.PackageURL = GetAppPkgId(item.GetKind(), item.GetName(), item.GetNamespace(), item.GetAPIVersion())
 	*k8sResourceList = append(*k8sResourceList, component)
-	config.ClxLogger.Debug("Created new component for resource:", "name", item.GetName(), "kind", item.GetKind(), "namespace", item.GetNamespace())
+	log.Debug().Msgf("Created new component for resource: %s, kind: %s, namespace: %s", item.GetName(), item.GetKind(), item.GetNamespace())
 }
 
 func GetAppPkgId(kind string, name string, namespace string, apiVersion string) string {
@@ -425,7 +409,7 @@ func addVersionForComponent(item unstructured.Unstructured, component *model.Com
 		componentSpec, ok := item.Object["spec"].(map[string]interface{})
 		componentVersion, err := componentSpec["version"].(string)
 		if !ok || !err {
-			log.Println("Fetching version from label helm.sh/chart ")
+			log.Info().Msgf("Fetching version from label helm.sh/chart for component: %s", component.Name)
 			addLabelIfExists(item, "helm.sh/chart", component, "clx:k8s:componentVersion")
 		} else {
 			component.AddProperty(key, componentVersion)
@@ -445,14 +429,14 @@ func addLabelIfExists(item unstructured.Unstructured, label string, component *m
 	// Get the label safely
 	labelValue, exists := labels[label]
 	if !exists {
-		// fmt.Printf("Info: Label %s not found for %s\n", label, item.GetName())
+		log.Debug().Msgf("Item %s does not have a label %s", item.GetName(), label)
 		return
 	}
 
 	// Ensure it's a string before returning
 	labelValueStr, valid := labelValue.(string)
 	if !valid {
-		config.ClxLogger.Error("Error: label is not a string for item", "label", label, "item", item.GetName())
+		log.Error().Msgf("Item %s has a label %s with value %v which is not a string.", item.GetName(), label, labelValue)
 		return
 	}
 
@@ -460,7 +444,6 @@ func addLabelIfExists(item unstructured.Unstructured, label string, component *m
 }
 
 func PkgID(componentName string, imageVersion string, imageSha string, baseUrl string) string {
-	// parts := strings.Split(component.Name, "/")
 	baseName := fmt.Sprintf("%s:%s/%s", model.PkgPrefix, model.OciPrefix, baseUrl)
 
 	urlValues := url.Values{
@@ -468,9 +451,6 @@ func PkgID(componentName string, imageVersion string, imageSha string, baseUrl s
 	}
 
 	urlValues.Add("version", imageVersion)
-
-	//TODO:
-	// Check for SHA usage in purl, and repository name to match it to existing kbom.json
 	if imageSha != "" {
 		baseName = fmt.Sprintf("%s@%s", baseName, imageSha)
 	}
