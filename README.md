@@ -6,6 +6,7 @@ An open-source project providing a comprehensive bill of materials (BoM) for Kub
 ## Installation
 
 ```bash
+brew tap guidewire-oss/tap
 brew install clx
 ```
 or
