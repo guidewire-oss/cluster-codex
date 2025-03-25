@@ -45,11 +45,11 @@ changelog:
 
 brews:
   - repository:
-      owner: Guideiwre
-      name: guidewire-oss/homebrew-tap
+      owner: guidewire-oss
+      name: homebrew-tap
     directory: Formula
     homepage: "https://github.com/guidewire-oss"
-    description: "Generate Kubernetes Bill of Materials for a Kubernetes cluster"
+    description: "Generate Kubernetes Bill of Materials for a Kubernetes cluster."
     license: "Apache 2"
     test: |
       system "#{bin}/clx", "version"
