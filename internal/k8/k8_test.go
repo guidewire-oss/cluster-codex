@@ -415,32 +415,47 @@ var _ = Describe("Kubernetes - Unit", Label("unit"), func() {
 
 			Expect(err).To(BeNil())
 			// ✅ Assert correct number of components (Pods + Deployments + Namespaces)
-			Expect(len(components)).To(Equal(3)) // busybox:latest, busybox:debug,nginx:latest
+			Expect(len(components)).To(Equal(6)) // busybox:latest, busybox:debug,nginx:latest
 
 			// ✅ Convert list into a map for easy lookup
 			componentMap := make(map[string]model.Component)
 			for _, comp := range components {
-				componentMap[comp.Name+":"+comp.Version] = comp
+				componentMap[comp.Name+":"+comp.GetNamespace()+":"+comp.Version] = comp
 			}
 
 			// ✅ Assert specific components exist with correct types
-			Expect(componentMap).To(HaveKey("index.docker.io/library/busybox:latest"))
-			Expect(componentMap).To(HaveKey("index.docker.io/library/busybox:debug"))
-			Expect(componentMap).To(HaveKey("index.docker.io/library/nginx:latest"))
-
+			Expect(componentMap).To(HaveKey("index.docker.io/library/busybox:default:latest"))
+			Expect(componentMap).To(HaveKey("index.docker.io/library/busybox:default:debug"))
+			Expect(componentMap).To(HaveKey("index.docker.io/library/nginx:default:latest"))
 			// ✅ Assert individual component details
-			Expect(componentMap["index.docker.io/library/busybox:latest"].PackageURL).To(Equal("pkg:oci/library/busybox?repository_url=index.docker.io%2Flibrary%2Fbusybox&version=latest"))
-			Expect(componentMap["index.docker.io/library/busybox:debug"].PackageURL).To(Equal("pkg:oci/library/busybox?repository_url=index.docker.io%2Flibrary%2Fbusybox&version=debug"))
-			Expect(componentMap["index.docker.io/library/nginx:latest"].PackageURL).To(Equal("pkg:oci/library/nginx?repository_url=index.docker.io%2Flibrary%2Fnginx&version=latest"))
-			componentPointer := componentMap["index.docker.io/library/nginx:latest"]
+			Expect(componentMap["index.docker.io/library/busybox:default:latest"].PackageURL).To(Equal("pkg:oci/library/busybox?namespace=default&repository_url=index.docker.io%2Flibrary%2Fbusybox&version=latest"))
+			Expect(componentMap["index.docker.io/library/busybox:default:debug"].PackageURL).To(Equal("pkg:oci/library/busybox?namespace=default&repository_url=index.docker.io%2Flibrary%2Fbusybox&version=debug"))
+			Expect(componentMap["index.docker.io/library/nginx:default:latest"].PackageURL).To(Equal("pkg:oci/library/nginx?namespace=default&repository_url=index.docker.io%2Flibrary%2Fnginx&version=latest"))
+
+			componentPointer := componentMap["index.docker.io/library/nginx:default:latest"]
 			property, found := componentPointer.GetPropertyObject(model.ComponentNamespace)
 			Expect(found).To(Equal(true))
 			Expect(property).ToNot(BeNil())
-			Expect(len(property.Values)).To(Equal(2))
-			Expect(property.Values).To(ConsistOf(mockNamespaceList))
+			Expect(len(property.Values)).To(Equal(1))
+			Expect(property.Values).To(ConsistOf("default"))
+
+			// Same image in a different namespace (kube-system in this case) should be added as a separate component to list
+			Expect(componentMap).To(HaveKey("index.docker.io/library/busybox:kube-system:latest"))
+			Expect(componentMap).To(HaveKey("index.docker.io/library/busybox:kube-system:debug"))
+			Expect(componentMap).To(HaveKey("index.docker.io/library/nginx:kube-system:latest"))
+			// ✅ Assert individual component details
+			Expect(componentMap["index.docker.io/library/busybox:kube-system:latest"].PackageURL).To(Equal("pkg:oci/library/busybox?namespace=kube-system&repository_url=index.docker.io%2Flibrary%2Fbusybox&version=latest"))
+			Expect(componentMap["index.docker.io/library/busybox:kube-system:debug"].PackageURL).To(Equal("pkg:oci/library/busybox?namespace=kube-system&repository_url=index.docker.io%2Flibrary%2Fbusybox&version=debug"))
+			Expect(componentMap["index.docker.io/library/nginx:kube-system:latest"].PackageURL).To(Equal("pkg:oci/library/nginx?namespace=kube-system&repository_url=index.docker.io%2Flibrary%2Fnginx&version=latest"))
+
+			componentPointer = componentMap["index.docker.io/library/nginx:kube-system:latest"]
+			property, found = componentPointer.GetPropertyObject(model.ComponentNamespace)
+			Expect(found).To(Equal(true))
+			Expect(property).ToNot(BeNil())
+			Expect(len(property.Values)).To(Equal(1))
+			Expect(property.Values).To(ConsistOf("kube-system"))
 		})
 	})
-
 })
 
 var _ = Describe("GetAppPkgId", Label("unit"), func() {

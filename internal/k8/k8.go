@@ -198,7 +198,8 @@ func (c *K8sClient) GetAllComponents(ctx context.Context) ([]model.Component, []
 }
 
 func (c *K8sClient) GetAllImages(ctx context.Context, namespaceList []string) ([]model.Component, error) {
-	imageNameMap := make(map[string]*model.Component) // A map of the image names to make sure each one appears only once
+	//imageNameMap := make(map[string]*model.Component) // A map of the image names to make sure each one appears only once
+	imageMap := make(map[string]*model.Component) // A map of the image purl to make sure each one appears only once
 	var componentList []*model.Component
 	for _, namespace := range namespaceList {
 		pods, err := c.Client.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
@@ -217,14 +218,16 @@ func (c *K8sClient) GetAllImages(ctx context.Context, namespaceList []string) ([
 				getPrimaryOwnerReference(c, pod.OwnerReferences, &ownerReferenceSet, namespace)
 			}
 
-			containerStatuses := pod.Status.ContainerStatuses
-			for _, container := range pod.Spec.Containers {
+			// Ephemeral containers are added only after the Pod is running but do not affect pod health
+			ephemeralContainerStatuses := pod.Status.EphemeralContainerStatuses
+			for _, container := range pod.Spec.EphemeralContainers {
 				//if c, exists := imageNameMap[container.Image]; exists {
 				//	updateImageInComponentList(namespace, c)
 				//} else {
-				component := addImageToComponentList(ContainerWrapper{container}, namespace, &componentList, containerStatuses, "main", ownerReferenceSet)
-				imageNameMap[container.Image] = component
+				//	component := addImageToComponentList(EphemeralContainerWrapper{container}, namespace, &componentList, ephemeralContainerStatuses, "ephemeral", ownerReferenceSet, imageMap)
+				//	imageNameMap[container.Image] = component
 				//}
+				addOrUpdateImageInComponentList(EphemeralContainerWrapper{container}, namespace, &componentList, ephemeralContainerStatuses, "ephemeral", ownerReferenceSet, imageMap)
 			}
 
 			initContainerStatuses := pod.Status.InitContainerStatuses
@@ -232,19 +235,21 @@ func (c *K8sClient) GetAllImages(ctx context.Context, namespaceList []string) ([
 				//if c, exists := imageNameMap[container.Image]; exists {
 				//	updateImageInComponentList(namespace, c)
 				//} else {
-				component := addImageToComponentList(ContainerWrapper{container}, namespace, &componentList, initContainerStatuses, "init", ownerReferenceSet)
-				imageNameMap[container.Image] = component
+				//	component := addImageToComponentList(ContainerWrapper{container}, namespace, &componentList, initContainerStatuses, "init", ownerReferenceSet, imageMap)
+				//	imageNameMap[container.Image] = component
 				//}
+				addOrUpdateImageInComponentList(ContainerWrapper{container}, namespace, &componentList, initContainerStatuses, "init", ownerReferenceSet, imageMap)
 			}
 
-			ephemeralContainerStatuses := pod.Status.EphemeralContainerStatuses
-			for _, container := range pod.Spec.EphemeralContainers {
+			containerStatuses := pod.Status.ContainerStatuses
+			for _, container := range pod.Spec.Containers {
 				//if c, exists := imageNameMap[container.Image]; exists {
 				//	updateImageInComponentList(namespace, c)
 				//} else {
-				component := addImageToComponentList(EphemeralContainerWrapper{container}, namespace, &componentList, ephemeralContainerStatuses, "ephemeral", ownerReferenceSet)
-				imageNameMap[container.Image] = component
+				//	component := addImageToComponentList(ContainerWrapper{container}, namespace, &componentList, containerStatuses, "main", ownerReferenceSet, imageMap)
+				//	imageNameMap[container.Image] = component
 				//}
+				addOrUpdateImageInComponentList(ContainerWrapper{container}, namespace, &componentList, containerStatuses, "main", ownerReferenceSet, imageMap)
 			}
 		}
 	}
@@ -297,16 +302,7 @@ func getPrimaryOwnerReference(k *K8sClient, ownerRefs []metav1.OwnerReference, o
 	}
 }
 
-func updateImageInComponentList(namespace string, component *model.Component) {
-	prop, exists := component.GetPropertyObject(model.ComponentNamespace)
-	if exists {
-		prop.InsertValue(namespace)
-	} else {
-		log.Fatal().Msgf("Could not find property 'clx:k8s:namespace' in component: %v", component)
-	}
-}
-
-func addImageToComponentList(container ContainerLike, namespace string, k8sResourceList *[]*model.Component, containerStatuses []v1.ContainerStatus, source string, ownerRefs set.Set[string]) *model.Component {
+func addOrUpdateImageInComponentList(container ContainerLike, namespace string, k8sResourceList *[]*model.Component, containerStatuses []v1.ContainerStatus, source string, ownerRefs set.Set[string], imageMap map[string]*model.Component) {
 	var properties []model.Property
 	var imageId = ""
 	var imageSha = ""
@@ -332,7 +328,42 @@ func addImageToComponentList(container ContainerLike, namespace string, k8sResou
 		Licenses:   nil,
 		Hashes:     nil,
 	}
+	component.AddProperty(model.ComponentNamespace, namespace)
+	component.PackageURL = GetImagePkgID(component, imageSha)
 
+	if c, exists := imageMap[component.PackageURL]; exists {
+		updateImageInComponentList(c, source, ownerRefs)
+		log.Debug().Msgf("Updated existing image for resource: %s, kind: image, namespace: %s", container.GetImage(), namespace)
+	} else {
+		c = addImageToComponentList(component, namespace, k8sResourceList, source, ownerRefs, imageMap)
+		log.Debug().Msgf("Added new image for resource: %s, kind: image, namespace: %s", container.GetImage(), namespace)
+		//add to imagemap
+		imageMap[component.PackageURL] = c
+	}
+}
+
+func updateImageInComponentList(component *model.Component, source string, ownerRefs set.Set[string]) {
+	prop, exists := component.GetPropertyObject(model.ComponentOwnerRef)
+	if exists {
+		if ownerRefs.Len() > 0 {
+			vals := mapToVariadicString(ownerRefs)
+			//TODO: Handle multiple containers owner references properly, currently assuming we need to add all owner references from all containers
+			component.AddPropertyMultipleValue(model.ComponentOwnerRef, vals...)
+		}
+	} else {
+		log.Error().Msgf("Could not find property '%s' in component: %v", model.ComponentOwnerRef, component)
+	}
+	prop, exists = component.GetPropertyObject(model.ComponentSourceRef)
+	if exists {
+		prop.InsertValue(source)
+	} else {
+		component.AddProperty("clx:k8s:source", source)
+	}
+}
+
+func addImageToComponentList(component *model.Component, namespace string, k8sResourceList *[]*model.Component, source string, ownerRefs set.Set[string], imageMap map[string]*model.Component) *model.Component {
+	// Add a new component
+	imageMap[component.PackageURL] = component
 	component.AddProperty(model.ComponentKind, "Image")
 	component.AddProperty(model.ComponentNamespace, namespace)
 	component.AddProperty("clx:k8s:source", source)
@@ -340,12 +371,61 @@ func addImageToComponentList(container ContainerLike, namespace string, k8sResou
 		vals := mapToVariadicString(ownerRefs)
 		component.AddPropertyMultipleValue("clx:k8s:ownerRef", vals...)
 	}
-	addPropertiesForImageComponent(component, imageSha)
 
 	*k8sResourceList = append(*k8sResourceList, component)
-	log.Debug().Msgf("Created new image for resource: %s, kind: image, namespace: %s", container.GetImage(), namespace)
+	log.Debug().Msgf("Created new image for resource: %s, kind: image, namespace: %s", component.Name, namespace)
 	return component
 }
+
+//func addImageToComponentList(container ContainerLike, namespace string, k8sResourceList *[]*model.Component, containerStatuses []v1.ContainerStatus, source string, ownerRefs set.Set[string], imageMap map[string]*model.Component) *model.Component {
+//	var properties []model.Property
+//	var imageId = ""
+//	var imageSha = ""
+//	for _, containerStatus := range containerStatuses {
+//
+//		if containerStatus.Name == container.GetName() {
+//			imageId = containerStatus.ImageID
+//			sha256 := "sha256:"
+//			if strings.Contains(imageId, sha256) {
+//				imageSha = fmt.Sprintf("%s%s", sha256, strings.Split(imageId, sha256)[1])
+//			} else {
+//				log.Error().Msgf("SHA256 digest not found in image: %s - continuing.", imageId)
+//			}
+//			break
+//		}
+//	}
+//
+//	component := &model.Component{
+//		Type:       "container",
+//		Name:       container.GetImage(), //Pass the full image name and split it into name and version in the function addPropertiesForImageComponent
+//		PackageURL: "",
+//		Properties: properties,
+//		Licenses:   nil,
+//		Hashes:     nil,
+//	}
+//	component.PackageURL = GetImagePkgID(component, imageSha)
+//
+//	//Update existing component
+//	if c, exists := imageMap[component.PackageURL]; exists {
+//		updateImageInComponentList(namespace, c)
+//		log.Debug().Msgf("Updated existing image for resource: %s, kind: image, namespace: %s", container.GetImage(), namespace)
+//	} else {
+//		// Add a new component
+//		imageMap[component.PackageURL] = component
+//		component.AddProperty(model.ComponentKind, "Image")
+//		component.AddProperty(model.ComponentNamespace, namespace)
+//		component.AddProperty("clx:k8s:source", source)
+//		//addPropertiesForImageComponent(component, imageSha)
+//		if ownerRefs.Len() > 0 {
+//			vals := mapToVariadicString(ownerRefs)
+//			component.AddPropertyMultipleValue("clx:k8s:ownerRef", vals...)
+//		}
+//
+//		*k8sResourceList = append(*k8sResourceList, component)
+//		log.Debug().Msgf("Created new image for resource: %s, kind: image, namespace: %s", container.GetImage(), namespace)
+//	}
+//	return component
+//}
 
 func mapToVariadicString(set set.Set[string]) []string {
 	// Create a slice to store the keys (set values)
@@ -357,14 +437,7 @@ func mapToVariadicString(set set.Set[string]) []string {
 }
 
 func addPropertiesForImageComponent(imageComponent *model.Component, imageSha string) {
-	ref, err := name.ParseReference(imageComponent.Name)
-	if err != nil {
-		log.Err(err).Msgf("No reference found for Image: %s", imageComponent.Name)
-	} else {
-		imageComponent.Version = ref.Identifier()
-		imageComponent.Name = strings.Split(ref.Name(), ":")[0]
-	}
-	imageComponent.PackageURL = PkgID(imageComponent, imageSha, ref.Context().RepositoryStr())
+	imageComponent.PackageURL = GetImagePkgID(imageComponent, imageSha)
 }
 
 func addToComponentList(item unstructured.Unstructured, k8sResourceList *[]model.Component) {
@@ -443,15 +516,25 @@ func addLabelIfExists(item unstructured.Unstructured, label string, component *m
 	component.AddProperty(propertyKey, labelValueStr)
 }
 
-func PkgID(component *model.Component, imageSha string, baseUrl string) string {
+func GetImagePkgID(imageComponent *model.Component, imageSha string) string {
+	ref, err := name.ParseReference(imageComponent.Name)
+	if err != nil {
+		log.Err(err).Msgf("No reference found for Image: %s", imageComponent.Name)
+	} else {
+		imageComponent.Version = ref.Identifier()
+		imageComponent.Name = strings.Split(ref.Name(), ":")[0]
+	}
+
+	baseUrl := ref.Context().RepositoryStr()
+
 	baseName := fmt.Sprintf("%s:%s/%s", model.PkgPrefix, model.OciPrefix, baseUrl)
 
 	urlValues := url.Values{
-		"repository_url": []string{component.Name},
+		"repository_url": []string{imageComponent.Name},
 	}
 
-	urlValues.Add("version", component.Version)
-	urlValues.Add("namespace", component.GetNamespace())
+	urlValues.Add("version", imageComponent.Version)
+	urlValues.Add("namespace", imageComponent.GetNamespace())
 	if imageSha != "" {
 		baseName = fmt.Sprintf("%s@%s", baseName, imageSha)
 	}

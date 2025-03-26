@@ -60,7 +60,7 @@ var _ = Describe("GenerateBOM - Integration", Label("integration"), Ordered, fun
 					Expect(ownerRef).To(Equal("Deployment/nginx-deployment"))
 					//Image sha will be different for multi-arch images so checking substring
 					Expect(images[0].PackageURL).To(ContainSubstring("pkg:oci/library/nginx@sha256:"))
-					Expect(images[0].PackageURL).To(ContainSubstring("?repository_url=index.docker.io%2Flibrary%2Fnginx&version=1.27.4"))
+					Expect(images[0].PackageURL).To(ContainSubstring("?namespace=clx-test&repository_url=index.docker.io%2Flibrary%2Fnginx&version=1.27.4"))
 				} else {
 					Expect(len(images)).To(BeNumerically("==", 0))
 				}
