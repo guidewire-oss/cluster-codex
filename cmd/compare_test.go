@@ -11,7 +11,7 @@ import (
 
 var _ = Describe("extractBOMToMap - Unit", Label("unit"), func() {
 	Context("when extractBOMToMap is called", func() {
-		var containerPurl = "pkg:oci/etcd@sha256:24bc64e911039ecf00e263be2161797c758b7d82403ca5516ab64047a477f737?repository_url=registry.k8s.io%2Fetcd&version=3.5.7-0"
+		var containerPurl = "pkg:oci/etcd@sha256:24bc64e911039ecf00e263be2161797c758b7d82403ca5516ab64047a477f737?namespace=default&repository_url=registry.k8s.io%2Fetcd&version=3.5.7-0"
 		var applicationPurl = "pkg:k8s/FlowSchema/service-accounts?apiVersion=flowcontrol.apiserver.k8s.io%2Fv1beta3"
 		var data = &unstructured.Unstructured{
 			Object: map[string]interface{}{
@@ -23,7 +23,7 @@ var _ = Describe("extractBOMToMap - Unit", Label("unit"), func() {
 						"version": "3.5.7-0",
 						"properties": []interface{}{
 							map[string]interface{}{"name": "clx:k8s:componentKind", "value": "Image"},
-							map[string]interface{}{"name": "clx:k8s:componentNamespace", "value": ""},
+							map[string]interface{}{"name": "clx:k8s:componentNamespace", "value": "default"},
 						},
 					},
 					map[string]interface{}{
@@ -46,7 +46,7 @@ var _ = Describe("extractBOMToMap - Unit", Label("unit"), func() {
 
 			Expect(result).To(HaveLen(1))
 			Expect(result).To(HaveKey(containerPurl))
-			Expect(result[containerPurl]).To(HaveKeyWithValue(BOM_PROPERTY_CONTAINER_NAMESPACE, ""))
+			Expect(result[containerPurl]).To(HaveKeyWithValue(BOM_PROPERTY_CONTAINER_NAMESPACE, "default"))
 			Expect(result[containerPurl]).To(HaveKeyWithValue(BOM_PROPERTY_VERSION, "3.5.7-0"))
 			Expect(result[containerPurl]).To(HaveKeyWithValue(BOM_PROPERTY_NAME, "registry.k8s.io/etcd"))
 			Expect(result[containerPurl]).To(HaveKeyWithValue("clx:k8s:componentKind", "Image"))
@@ -109,11 +109,12 @@ var _ = Describe("extractBOMToMap - Unit", Label("unit"), func() {
 var _ = Describe("compareKBOMData - Unit", Label("unit"), func() {
 	Context("when compareKBOMData is called", func() {
 		var expected = map[string]map[string]string{
-			"pkg:oci/library/nginx@sha256:def7ef7fb89393d88ba6632347672cbde03926256220c2e535e4585335b838a0?repository_url=index.docker.io%2Flibrary%2Fnginx&version=1.27.4": {
+			"pkg:oci/library/nginx@sha256:def7ef7fb89393d88ba6632347672cbde03926256220c2e535e4585335b838a0?namespace=repository_url=index.docker.io%2Flibrary%2Fnginx&version=1.27.4": {
 				"clx:k8s:componentKind":      "Image",
 				"clx:k8s:componentNamespace": "",
 				"cdx:k8s:component:name":     "index.docker.io/library/nginx",
 				"cdx:k8s:component:version":  "3.5.7-0",
+				"clx:k8s:ownerRef":           "Deployment/nginx",
 			},
 		}
 
@@ -123,6 +124,7 @@ var _ = Describe("compareKBOMData - Unit", Label("unit"), func() {
 				"clx:k8s:componentNamespace": "",
 				"cdx:k8s:component:name":     "index.docker.io/library/nginx",
 				"cdx:k8s:component:version":  "3.5.7-1",
+				"clx:k8s:ownerRef":           "Deployment/external-secrets",
 			},
 		}
 
@@ -154,6 +156,11 @@ var _ = Describe("compareKBOMData - Unit", Label("unit"), func() {
 				PropertyName: BOM_PROPERTY_VERSION,
 				Expected:     "3.5.7-0",
 				Actual:       "3.5.7-1",
+			}))
+			Expect(err[0].Properties).To(ContainElement(ComparisonProperty{
+				PropertyName: BOM_PROPERTY_OWNERREF,
+				Expected:     "Deployment/nginx",
+				Actual:       "Deployment/external-secrets",
 			}))
 		})
 

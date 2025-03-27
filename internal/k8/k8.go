@@ -201,6 +201,7 @@ func (c *K8sClient) GetAllImages(ctx context.Context, namespaceList []string) ([
 	//imageNameMap := make(map[string]*model.Component) // A map of the image names to make sure each one appears only once
 	imageMap := make(map[string]*model.Component) // A map of the image purl to make sure each one appears only once
 	var componentList []*model.Component
+	var primaryOwnerRef string
 	for _, namespace := range namespaceList {
 		pods, err := c.Client.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
 		if err != nil {
@@ -215,7 +216,7 @@ func (c *K8sClient) GetAllImages(ctx context.Context, namespaceList []string) ([
 				//Special cases for Owner References:
 				//	1. ReplicaSets can be owned by Deployments or custom CRDs
 				//	2. Jobs can be owned by CronJobs or custom CRDs
-				getPrimaryOwnerReference(c, pod.OwnerReferences, &ownerReferenceSet, namespace)
+				primaryOwnerRef = getPrimaryOwnerReference(c, pod.OwnerReferences, &ownerReferenceSet, namespace)
 			}
 
 			// Ephemeral containers are added only after the Pod is running but do not affect pod health
@@ -227,7 +228,7 @@ func (c *K8sClient) GetAllImages(ctx context.Context, namespaceList []string) ([
 				//	component := addImageToComponentList(EphemeralContainerWrapper{container}, namespace, &componentList, ephemeralContainerStatuses, "ephemeral", ownerReferenceSet, imageMap)
 				//	imageNameMap[container.Image] = component
 				//}
-				addOrUpdateImageInComponentList(EphemeralContainerWrapper{container}, namespace, &componentList, ephemeralContainerStatuses, "ephemeral", ownerReferenceSet, imageMap)
+				addOrUpdateImageInComponentList(EphemeralContainerWrapper{container}, namespace, &componentList, ephemeralContainerStatuses, "ephemeral", ownerReferenceSet, primaryOwnerRef, imageMap)
 			}
 
 			initContainerStatuses := pod.Status.InitContainerStatuses
@@ -238,7 +239,7 @@ func (c *K8sClient) GetAllImages(ctx context.Context, namespaceList []string) ([
 				//	component := addImageToComponentList(ContainerWrapper{container}, namespace, &componentList, initContainerStatuses, "init", ownerReferenceSet, imageMap)
 				//	imageNameMap[container.Image] = component
 				//}
-				addOrUpdateImageInComponentList(ContainerWrapper{container}, namespace, &componentList, initContainerStatuses, "init", ownerReferenceSet, imageMap)
+				addOrUpdateImageInComponentList(ContainerWrapper{container}, namespace, &componentList, initContainerStatuses, "init", ownerReferenceSet, primaryOwnerRef, imageMap)
 			}
 
 			containerStatuses := pod.Status.ContainerStatuses
@@ -249,7 +250,7 @@ func (c *K8sClient) GetAllImages(ctx context.Context, namespaceList []string) ([
 				//	component := addImageToComponentList(ContainerWrapper{container}, namespace, &componentList, containerStatuses, "main", ownerReferenceSet, imageMap)
 				//	imageNameMap[container.Image] = component
 				//}
-				addOrUpdateImageInComponentList(ContainerWrapper{container}, namespace, &componentList, containerStatuses, "main", ownerReferenceSet, imageMap)
+				addOrUpdateImageInComponentList(ContainerWrapper{container}, namespace, &componentList, containerStatuses, "main", ownerReferenceSet, primaryOwnerRef, imageMap)
 			}
 		}
 	}
@@ -260,49 +261,88 @@ func (c *K8sClient) GetAllImages(ctx context.Context, namespaceList []string) ([
 	return finalList, nil
 }
 
-func getPrimaryOwnerReference(k *K8sClient, ownerRefs []metav1.OwnerReference, ownerReferenceSet *set.Set[string], namespace string) {
-	for _, ownerReference := range ownerRefs {
-		ownerReferenceKey := fmt.Sprintf("%s/%s", ownerReference.Kind, ownerReference.Name)
-		if ownerReferenceSet.Has(ownerReferenceKey) {
-			// Already identified the owner reference for this pod
-			continue
-		}
+func getPrimaryOwnerReference(k *K8sClient, ownerRefs []metav1.OwnerReference, ownerReferenceSet *set.Set[string], namespace string) string {
 
-		if ownerReference.Kind == "ReplicaSet" { //ReplicaSets can be managed by Deployments
-			replicaSetName := ownerReference.Name
+	//Special cases for Owner References:
+	//	1. ReplicaSets can be owned by Deployments or custom CRDs
+	//	2. Jobs can be owned by CronJobs or custom CRDs
+	ownerReference := getOnePrimaryOwnerReference(ownerRefs)
 
-			// Retrieve the ReplicaSet
-			replicaSet, err := k.Client.AppsV1().ReplicaSets(namespace).Get(context.TODO(), replicaSetName, metav1.GetOptions{})
-			if err != nil {
-				log.Err(err).Msgf("Error retrieving Replicaset: %s", replicaSetName)
-				return
-			}
-
-			if len(replicaSet.OwnerReferences) > 0 {
-				getPrimaryOwnerReference(k, replicaSet.OwnerReferences, ownerReferenceSet, namespace)
-				continue
-			}
-		}
-
-		if ownerReference.Kind == "Job" { //Jobs can be managed by CronJobs
-			jobName := ownerReference.Name
-			job, err := k.Client.BatchV1().Jobs(namespace).Get(context.TODO(), jobName, metav1.GetOptions{})
-
-			if err != nil {
-				log.Err(err).Msgf("Error retrieving Job: %s", jobName)
-				return
-			}
-
-			if len(job.OwnerReferences) > 0 {
-				getPrimaryOwnerReference(k, job.OwnerReferences, ownerReferenceSet, namespace)
-				continue
-			}
-		}
-		ownerReferenceSet.Insert(ownerReferenceKey)
+	//for _, ownerReference := range ownerRefs {
+	ownerReferenceKey := fmt.Sprintf("%s/%s", ownerReference.Kind, ownerReference.Name)
+	if ownerReferenceSet.Has(ownerReferenceKey) {
+		// Already identified the owner reference for this pod
+		//continue
+		return ownerReferenceKey
 	}
+
+	if ownerReference.Kind == "ReplicaSet" { //ReplicaSets can be managed by Deployments
+		replicaSetName := ownerReference.Name
+
+		// Retrieve the ReplicaSet
+		replicaSet, err := k.Client.AppsV1().ReplicaSets(namespace).Get(context.TODO(), replicaSetName, metav1.GetOptions{})
+		if err != nil {
+			log.Err(err).Msgf("Error retrieving Replicaset: %s", replicaSetName)
+			return ownerReferenceKey
+		}
+
+		if len(replicaSet.OwnerReferences) > 0 {
+			primaryOwnerRef := getOnePrimaryOwnerReference(replicaSet.OwnerReferences)
+			//continue
+			ownerReferenceKey = fmt.Sprintf("%s/%s", primaryOwnerRef.Kind, primaryOwnerRef.Name)
+		}
+	}
+
+	if ownerReference.Kind == "Job" { //Jobs can be managed by CronJobs
+		jobName := ownerReference.Name
+		job, err := k.Client.BatchV1().Jobs(namespace).Get(context.TODO(), jobName, metav1.GetOptions{})
+
+		if err != nil {
+			log.Err(err).Msgf("Error retrieving Job: %s", jobName)
+			return ownerReferenceKey
+		}
+
+		if len(job.OwnerReferences) > 0 {
+			primaryOwnerRef := getOnePrimaryOwnerReference(job.OwnerReferences)
+			//continue
+			ownerReferenceKey = fmt.Sprintf("%s/%s", primaryOwnerRef.Kind, primaryOwnerRef.Name)
+
+		}
+	}
+	ownerReferenceSet.Insert(ownerReferenceKey)
+	return ownerReferenceKey
+	//}
 }
 
-func addOrUpdateImageInComponentList(container ContainerLike, namespace string, k8sResourceList *[]*model.Component, containerStatuses []v1.ContainerStatus, source string, ownerRefs set.Set[string], imageMap map[string]*model.Component) {
+func getOnePrimaryOwnerReference(ownerRefs []metav1.OwnerReference) metav1.OwnerReference {
+	// Define priority for Kubernetes-native kinds
+	nativeKinds := map[string]int{
+		"Deployment":  1,
+		"StatefulSet": 2,
+		"DaemonSet":   3,
+		"CronJob":     4,
+	}
+
+	var primaryOwner metav1.OwnerReference
+	highestPriority := len(nativeKinds) + 1
+
+	// Check for the highest-priority native kind
+	for _, owner := range ownerRefs {
+		if priority, exists := nativeKinds[owner.Kind]; exists && priority < highestPriority {
+			primaryOwner = owner
+			highestPriority = priority
+		}
+	}
+
+	// Fallback to any custom resource if no native kind is found
+	if primaryOwner.Kind == "" && len(ownerRefs) > 0 {
+		primaryOwner = ownerRefs[0]
+	}
+
+	return primaryOwner
+}
+
+func addOrUpdateImageInComponentList(container ContainerLike, namespace string, k8sResourceList *[]*model.Component, containerStatuses []v1.ContainerStatus, source string, ownerRefs set.Set[string], primaryOwnerRef string, imageMap map[string]*model.Component) {
 	var properties []model.Property
 	var imageId = ""
 	var imageSha = ""
@@ -332,45 +372,49 @@ func addOrUpdateImageInComponentList(container ContainerLike, namespace string, 
 	component.PackageURL = GetImagePkgID(component, imageSha)
 
 	if c, exists := imageMap[component.PackageURL]; exists {
-		updateImageInComponentList(c, source, ownerRefs)
+		updateImageInComponentList(c, source, ownerRefs, primaryOwnerRef)
 		log.Debug().Msgf("Updated existing image for resource: %s, kind: image, namespace: %s", container.GetImage(), namespace)
 	} else {
-		c = addImageToComponentList(component, namespace, k8sResourceList, source, ownerRefs, imageMap)
+		c = addImageToComponentList(component, namespace, k8sResourceList, source, ownerRefs, primaryOwnerRef, imageMap)
 		log.Debug().Msgf("Added new image for resource: %s, kind: image, namespace: %s", container.GetImage(), namespace)
 		//add to imagemap
 		imageMap[component.PackageURL] = c
 	}
 }
 
-func updateImageInComponentList(component *model.Component, source string, ownerRefs set.Set[string]) {
+func updateImageInComponentList(component *model.Component, source string, ownerRefs set.Set[string], primaryOwner string) {
 	prop, exists := component.GetPropertyObject(model.ComponentOwnerRef)
 	if exists {
-		if ownerRefs.Len() > 0 {
-			vals := mapToVariadicString(ownerRefs)
-			//TODO: Handle multiple containers owner references properly, currently assuming we need to add all owner references from all containers
-			component.AddPropertyMultipleValue(model.ComponentOwnerRef, vals...)
-		}
+		//if ownerRefs.Len() > 0 {
+		//	vals := mapToVariadicString(ownerRefs)
+		//	//TODO: Handle multiple containers owner references properly, currently assuming we need to add all owner references from all containers
+		//	component.AddPropertyMultipleValue(model.ComponentOwnerRef, vals...)
+		//}
+		fmt.Sprintf("here---%v\n", ownerRefs)
 	} else {
 		log.Error().Msgf("Could not find property '%s' in component: %v", model.ComponentOwnerRef, component)
 	}
 	prop, exists = component.GetPropertyObject(model.ComponentSourceRef)
 	if exists {
-		prop.InsertValue(source)
+		prop.Values = []string{source}
 	} else {
 		component.AddProperty("clx:k8s:source", source)
 	}
 }
 
-func addImageToComponentList(component *model.Component, namespace string, k8sResourceList *[]*model.Component, source string, ownerRefs set.Set[string], imageMap map[string]*model.Component) *model.Component {
+func addImageToComponentList(component *model.Component, namespace string, k8sResourceList *[]*model.Component, source string, ownerRefs set.Set[string], primaryOwner string, imageMap map[string]*model.Component) *model.Component {
 	// Add a new component
 	imageMap[component.PackageURL] = component
 	component.AddProperty(model.ComponentKind, "Image")
 	component.AddProperty(model.ComponentNamespace, namespace)
 	component.AddProperty("clx:k8s:source", source)
-	if ownerRefs.Len() > 0 {
-		vals := mapToVariadicString(ownerRefs)
-		component.AddPropertyMultipleValue("clx:k8s:ownerRef", vals...)
-	}
+	component.AddProperty("clx:k8s:ownerRef", primaryOwner)
+
+	//TODO: capture multipe ownerRefs in pedigree or externalReferences property in component
+	//if ownerRefs.Len() > 0 {
+	//	vals := mapToVariadicString(ownerRefs)
+	//	component.AddPropertyMultipleValue("clx:k8s:ownerRef", vals...)
+	//}
 
 	*k8sResourceList = append(*k8sResourceList, component)
 	log.Debug().Msgf("Created new image for resource: %s, kind: image, namespace: %s", component.Name, namespace)

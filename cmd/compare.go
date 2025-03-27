@@ -35,6 +35,7 @@ const CONTAINER = "container"
 const BOM_PROPERTY_NAME = "cdx:k8s:component:name"
 const BOM_PROPERTY_CONTAINER_NAMESPACE = "clx:k8s:componentNamespace"
 const BOM_PROPERTY_VERSION = "cdx:k8s:component:version"
+const BOM_PROPERTY_OWNERREF = "clx:k8s:ownerRef"
 
 const ComponentType = "component-type"
 
