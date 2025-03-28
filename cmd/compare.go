@@ -32,10 +32,10 @@ type BOMMap struct {
 const APPLICATION = "application"
 const CONTAINER = "container"
 
-const BOM_PROPERTY_NAME = "cdx:k8s:component:name"
+const BOM_PROPERTY_NAME = "clx:k8s:component:name"
 const BOM_PROPERTY_CONTAINER_NAMESPACE = "clx:k8s:componentNamespace"
-const BOM_PROPERTY_VERSION = "cdx:k8s:component:version"
-const BOM_PROPERTY_OWNERREF = "clx:k8s:ownerRef"
+const BOM_PROPERTY_VERSION = "clx:k8s:component:version"
+const BOM_PROPERTY_OWNERREF = "clx:k8s:component:ownerRef"
 
 const ComponentType = "component-type"
 
@@ -136,15 +136,16 @@ func CompareKBOM(expectedStruct *unstructured.Unstructured, actualStruct *unstru
 
 func ExtractBOMToMap(data *unstructured.Unstructured, dataType string) map[string]map[string]string {
 	dataMap := make(map[string]map[string]string)
-
 	for _, value := range data.Object["components"].([]interface{}) {
 		innerContainerMap := make(map[string]string)
 
 		component := value.(map[string]interface{})
 		kbomType := component["type"].(string)
-		purl := component["purl"].(string)
+		name := component["name"].(string)
+		purl := ecrRegex.ReplaceAllString(component["purl"].(string), "*")
+
 		properties := component["properties"].([]interface{})
-		if kbomType == dataType {
+		if kbomType == dataType { //Add to respective map for application or container type
 			for _, props := range properties {
 				itemKey := props.(map[string]interface{})["name"].(string)
 				itemValue := props.(map[string]interface{})["value"].(string)
@@ -152,6 +153,9 @@ func ExtractBOMToMap(data *unstructured.Unstructured, dataType string) map[strin
 			}
 			innerContainerMap[BOM_PROPERTY_NAME] = component["name"].(string)
 			innerContainerMap[BOM_PROPERTY_VERSION] = component["version"].(string)
+			if dataType == CONTAINER {
+				purl = innerContainerMap[BOM_PROPERTY_CONTAINER_NAMESPACE] + "/" + ecrRegex.ReplaceAllString(name, "*")
+			}
 			dataMap[purl] = innerContainerMap
 		}
 	}
@@ -187,6 +191,24 @@ func CompareKBOMData(expected map[string]map[string]string, actual map[string]ma
 		}
 		// Compare the properties of the expected and actual components
 	}
+
+	// Check if the expected component from actual KBOM is present in the golden cluster KBOM
+	for name, actualProps := range actual {
+		_, found := expected[name]
+
+		friendlyName := actualProps[BOM_PROPERTY_NAME]
+		//kbomType := expectedProps[BOM_PROPERTY_TYPE]
+		namespace := actualProps[BOM_PROPERTY_CONTAINER_NAMESPACE]
+
+		// If the component is not present in the expected Golden KBOM, we consider it as a warning
+		if !found {
+			comparisonProp := []ComparisonProperty{{PropertyName: "", Expected: "Missing",
+				Actual: "Exists"}}
+			mismatch := ComponentData{Name: /*name*/ namespace + "/" + friendlyName, Type: actualProps[ComponentType], Properties: comparisonProp}
+			warnMismatching = append(warnMismatching, mismatch)
+		}
+	}
+
 	return warnMismatching, errorMismatching
 }
 
@@ -224,7 +246,7 @@ func printMismatches(errors []ComponentData, componentType string, skipPropertyN
 	if !skipPropertyName {
 		header = append(header, "Property Name")
 	}
-	header = append(header, "Golden", getClusterName())
+	header = append(header, getColumnName("BOM_EXPECTED_COLUMN_NAME", "Expected"), getColumnName("BOM_ACTUAL_COLUMN_NAME", "Actual"))
 	t.AppendHeader(header)
 
 	for _, differences := range errors {
@@ -253,10 +275,10 @@ func getColoredText(text string, color string) string {
 	}
 	return fmt.Sprint(color, text, reset)
 }
-func getClusterName() (clusterName string) {
-	clusterName = os.Getenv("CLUSTER_NAME")
+func getColumnName(envClusterName string, defaultName string) (clusterName string) {
+	clusterName = os.Getenv(envClusterName)
 	if clusterName == "" {
-		clusterName = "Current Cluster"
+		return defaultName
 	}
-	return
+	return clusterName
 }

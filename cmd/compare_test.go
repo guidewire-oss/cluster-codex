@@ -13,6 +13,7 @@ var _ = Describe("extractBOMToMap - Unit", Label("unit"), func() {
 	Context("when extractBOMToMap is called", func() {
 		var containerPurl = "pkg:oci/etcd@sha256:24bc64e911039ecf00e263be2161797c758b7d82403ca5516ab64047a477f737?namespace=default&repository_url=registry.k8s.io%2Fetcd&version=3.5.7-0"
 		var applicationPurl = "pkg:k8s/FlowSchema/service-accounts?apiVersion=flowcontrol.apiserver.k8s.io%2Fv1beta3"
+		var key = "default/registry.k8s.io/etcd"
 		var data = &unstructured.Unstructured{
 			Object: map[string]interface{}{
 				"components": []interface{}{
@@ -45,11 +46,11 @@ var _ = Describe("extractBOMToMap - Unit", Label("unit"), func() {
 			result := ExtractBOMToMap(data, "container")
 
 			Expect(result).To(HaveLen(1))
-			Expect(result).To(HaveKey(containerPurl))
-			Expect(result[containerPurl]).To(HaveKeyWithValue(BOM_PROPERTY_CONTAINER_NAMESPACE, "default"))
-			Expect(result[containerPurl]).To(HaveKeyWithValue(BOM_PROPERTY_VERSION, "3.5.7-0"))
-			Expect(result[containerPurl]).To(HaveKeyWithValue(BOM_PROPERTY_NAME, "registry.k8s.io/etcd"))
-			Expect(result[containerPurl]).To(HaveKeyWithValue("clx:k8s:componentKind", "Image"))
+			Expect(result).To(HaveKey("default/registry.k8s.io/etcd"))
+			Expect(result[key]).To(HaveKeyWithValue(BOM_PROPERTY_CONTAINER_NAMESPACE, "default"))
+			Expect(result[key]).To(HaveKeyWithValue(BOM_PROPERTY_VERSION, "3.5.7-0"))
+			Expect(result[key]).To(HaveKeyWithValue(BOM_PROPERTY_NAME, "registry.k8s.io/etcd"))
+			Expect(result[key]).To(HaveKeyWithValue("clx:k8s:componentKind", "Image"))
 		})
 
 		It("should extract application of the given type", func() {
@@ -80,16 +81,17 @@ var _ = Describe("extractBOMToMap - Unit", Label("unit"), func() {
 							"version": "3.5.7-0",
 							"properties": []interface{}{
 								map[string]interface{}{"name": "clx:k8s:componentKind", "value": "Image"},
-								map[string]interface{}{"name": "clx:k8s:componentNamespace", "value": ""},
+								map[string]interface{}{"name": "clx:k8s:componentNamespace", "value": "default"},
 							},
 						},
 						map[string]interface{}{
-							"type":    "container",
-							"purl":    "pkg:k8s/ClusterRoleBinding/system:controller:certificate-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
-							"name":    "system:controller:certificate-controller",
-							"version": "rbac.authorization.k8s.io/v1",
+							"type": "container",
+							//"purl":    "pkg:k8s/ClusterRoleBinding/system:controller:certificate-controller?apiVersion=rbac.authorization.k8s.io%2Fv1",
+							"purl":    "pkg:oci/docker-public/loftsh/jspolicy@sha256:12345678?namespace=default&ownerRef=Deployment%2Fjspolicy&repository_url=11111111.dkr.ecr.us-west-2.amazonaws.com%2Fdocker-public%2Floftsh%2Fjspolicy",
+							"name":    "11111111.dkr.ecr.us-west-2.amazonaws.com/docker-public/loftsh/jspolicy",
+							"version": "0.0.1",
 							"properties": []interface{}{
-								map[string]interface{}{"name": "clx:k8s:componentKind", "value": "ClusterRoleBinding"},
+								map[string]interface{}{"name": "clx:k8s:componentKind", "value": "Image"},
 								map[string]interface{}{"name": "clx:k8s:componentNamespace", "value": "default"},
 							},
 						},
@@ -100,8 +102,8 @@ var _ = Describe("extractBOMToMap - Unit", Label("unit"), func() {
 			result := ExtractBOMToMap(data, "container")
 
 			Expect(result).To(HaveLen(2))
-			Expect(result).To(HaveKey(containerPurl))
-			Expect(result).To(HaveKey("pkg:k8s/ClusterRoleBinding/system:controller:certificate-controller?apiVersion=rbac.authorization.k8s.io%2Fv1"))
+			Expect(result).To(HaveKey("default/registry.k8s.io/etcd"))
+			Expect(result).To(HaveKey("default/*/docker-public/loftsh/jspolicy"))
 		})
 	})
 })
@@ -109,22 +111,22 @@ var _ = Describe("extractBOMToMap - Unit", Label("unit"), func() {
 var _ = Describe("compareKBOMData - Unit", Label("unit"), func() {
 	Context("when compareKBOMData is called", func() {
 		var expected = map[string]map[string]string{
-			"pkg:oci/library/nginx@sha256:def7ef7fb89393d88ba6632347672cbde03926256220c2e535e4585335b838a0?namespace=repository_url=index.docker.io%2Flibrary%2Fnginx&version=1.27.4": {
+			"pkg:oci/library/nginx@sha256:def7ef7fb89393d88ba6632347672cbde03926256220c2e535e4585335b838a0?namespace=&repository_url=index.docker.io%2Flibrary%2Fnginx": {
 				"clx:k8s:componentKind":      "Image",
 				"clx:k8s:componentNamespace": "",
-				"cdx:k8s:component:name":     "index.docker.io/library/nginx",
-				"cdx:k8s:component:version":  "3.5.7-0",
-				"clx:k8s:ownerRef":           "Deployment/nginx",
+				"clx:k8s:component:name":     "index.docker.io/library/nginx",
+				"clx:k8s:component:version":  "3.5.7-0",
+				"clx:k8s:component:ownerRef": "Deployment/nginx",
 			},
 		}
 
 		var actual = map[string]map[string]string{
-			"pkg:oci/library/nginx@sha256:def7ef7fb89393d88ba6632347672cbde03926256220c2e535e4585335b838a0?repository_url=index.docker.io%2Flibrary%2Fnginx&version=1.27.4": {
+			"pkg:oci/library/nginx@sha256:def7ef7fb89393d88ba6632347672cbde03926256220c2e535e4585335b838a0?namespace=&repository_url=index.docker.io%2Flibrary%2Fnginx": {
 				"clx:k8s:componentKind":      "Image",
 				"clx:k8s:componentNamespace": "",
-				"cdx:k8s:component:name":     "index.docker.io/library/nginx",
-				"cdx:k8s:component:version":  "3.5.7-1",
-				"clx:k8s:ownerRef":           "Deployment/external-secrets",
+				"clx:k8s:component:name":     "index.docker.io/library/nginx",
+				"clx:k8s:component:version":  "3.5.7-1",
+				"clx:k8s:component:ownerRef": "Deployment/external-secrets",
 			},
 		}
 
@@ -141,7 +143,7 @@ var _ = Describe("compareKBOMData - Unit", Label("unit"), func() {
 			expected := map[string]map[string]string{} // Empty expected
 			warn, err := CompareKBOMData(expected, actual)
 
-			Expect(warn).To(BeEmpty())
+			Expect(warn).To(HaveLen(1))
 			Expect(err).To(BeEmpty())
 		})
 
@@ -166,11 +168,12 @@ var _ = Describe("compareKBOMData - Unit", Label("unit"), func() {
 
 		It("should return no warnings or errors when expected and actual match", func() {
 			actual := map[string]map[string]string{
-				"pkg:oci/library/nginx@sha256:def7ef7fb89393d88ba6632347672cbde03926256220c2e535e4585335b838a0?repository_url=index.docker.io%2Flibrary%2Fnginx&version=1.27.4": {
+				"pkg:oci/library/nginx@sha256:def7ef7fb89393d88ba6632347672cbde03926256220c2e535e4585335b838a0?namespace=&repository_url=index.docker.io%2Flibrary%2Fnginx": {
 					"clx:k8s:componentKind":      "Image",
 					"clx:k8s:componentNamespace": "",
-					"cdx:k8s:component:name":     "index.docker.io/library/nginx",
-					"cdx:k8s:component:version":  "3.5.7-0",
+					"clx:k8s:component:name":     "index.docker.io/library/nginx",
+					"clx:k8s:component:version":  "3.5.7-0",
+					"clx:k8s:component:ownerRef": "Deployment/nginx",
 				},
 			}
 

@@ -346,9 +346,13 @@ func addOrUpdateImageInComponentList(container ContainerLike, namespace string, 
 	var properties []model.Property
 	var imageId = ""
 	var imageSha = ""
+	var version = ""
 	for _, containerStatus := range containerStatuses {
-
 		if containerStatus.Name == container.GetName() {
+			if containerStatus.State.Terminated != nil {
+				return // Ignore the container which is already terminated
+			}
+
 			imageId = containerStatus.ImageID
 			sha256 := "sha256:"
 			if strings.Contains(imageId, sha256) {
@@ -369,10 +373,10 @@ func addOrUpdateImageInComponentList(container ContainerLike, namespace string, 
 		Hashes:     nil,
 	}
 	component.AddProperty(model.ComponentNamespace, namespace)
-	component.PackageURL = GetImagePkgID(component, imageSha)
+	component.PackageURL, version = GetImagePkgID(component, imageSha, primaryOwnerRef)
 
 	if c, exists := imageMap[component.PackageURL]; exists {
-		updateImageInComponentList(c, source, ownerRefs, primaryOwnerRef)
+		updateImageInComponentList(c, source, ownerRefs, primaryOwnerRef, version)
 		log.Debug().Msgf("Updated existing image for resource: %s, kind: image, namespace: %s", container.GetImage(), namespace)
 	} else {
 		c = addImageToComponentList(component, namespace, k8sResourceList, source, ownerRefs, primaryOwnerRef, imageMap)
@@ -382,7 +386,7 @@ func addOrUpdateImageInComponentList(container ContainerLike, namespace string, 
 	}
 }
 
-func updateImageInComponentList(component *model.Component, source string, ownerRefs set.Set[string], primaryOwner string) {
+func updateImageInComponentList(component *model.Component, source string, ownerRefs set.Set[string], primaryOwner string, version string) {
 	prop, exists := component.GetPropertyObject(model.ComponentOwnerRef)
 	if exists {
 		//if ownerRefs.Len() > 0 {
@@ -390,7 +394,6 @@ func updateImageInComponentList(component *model.Component, source string, owner
 		//	//TODO: Handle multiple containers owner references properly, currently assuming we need to add all owner references from all containers
 		//	component.AddPropertyMultipleValue(model.ComponentOwnerRef, vals...)
 		//}
-		fmt.Sprintf("here---%v\n", ownerRefs)
 	} else {
 		log.Error().Msgf("Could not find property '%s' in component: %v", model.ComponentOwnerRef, component)
 	}
@@ -400,6 +403,13 @@ func updateImageInComponentList(component *model.Component, source string, owner
 	} else {
 		component.AddProperty("clx:k8s:source", source)
 	}
+	prop, exists = component.GetPropertyObject(model.ComponentVersion)
+	if exists {
+		prop.Values = []string{version}
+	} else {
+		component.AddProperty(model.ComponentVersion, version)
+	}
+
 }
 
 func addImageToComponentList(component *model.Component, namespace string, k8sResourceList *[]*model.Component, source string, ownerRefs set.Set[string], primaryOwner string, imageMap map[string]*model.Component) *model.Component {
@@ -409,6 +419,7 @@ func addImageToComponentList(component *model.Component, namespace string, k8sRe
 	component.AddProperty(model.ComponentNamespace, namespace)
 	component.AddProperty("clx:k8s:source", source)
 	component.AddProperty("clx:k8s:ownerRef", primaryOwner)
+	component.AddProperty(model.ComponentVersion, component.Version)
 
 	//TODO: capture multipe ownerRefs in pedigree or externalReferences property in component
 	//if ownerRefs.Len() > 0 {
@@ -480,9 +491,9 @@ func mapToVariadicString(set set.Set[string]) []string {
 	return values
 }
 
-func addPropertiesForImageComponent(imageComponent *model.Component, imageSha string) {
-	imageComponent.PackageURL = GetImagePkgID(imageComponent, imageSha)
-}
+//func addPropertiesForImageComponent(imageComponent *model.Component, imageSha string) {
+//	imageComponent.PackageURL = GetImagePkgID(imageComponent, imageSha)
+//}
 
 func addToComponentList(item unstructured.Unstructured, k8sResourceList *[]model.Component) {
 	var properties []model.Property
@@ -560,7 +571,7 @@ func addLabelIfExists(item unstructured.Unstructured, label string, component *m
 	component.AddProperty(propertyKey, labelValueStr)
 }
 
-func GetImagePkgID(imageComponent *model.Component, imageSha string) string {
+func GetImagePkgID(imageComponent *model.Component, imageSha string, primaryOwnerRef string) (string, string) {
 	ref, err := name.ParseReference(imageComponent.Name)
 	if err != nil {
 		log.Err(err).Msgf("No reference found for Image: %s", imageComponent.Name)
@@ -577,12 +588,12 @@ func GetImagePkgID(imageComponent *model.Component, imageSha string) string {
 		"repository_url": []string{imageComponent.Name},
 	}
 
-	urlValues.Add("version", imageComponent.Version)
+	urlValues.Add("ownerRef", primaryOwnerRef)
 	urlValues.Add("namespace", imageComponent.GetNamespace())
 	if imageSha != "" {
 		baseName = fmt.Sprintf("%s@%s", baseName, imageSha)
 	}
 
-	//Format:  pkg:oci/{imageName}/{@ImageSha}?repository_url={repourl}&version={version}&namespace={namespace}
-	return fmt.Sprintf("%s?%s", baseName, urlValues.Encode())
+	//Format:  pkg:oci/{imageName}/{@ImageSha}?namespace={namespace}&ownerRef={primaryOwnerRef}&repository_url={repourl}&
+	return fmt.Sprintf("%s?%s", baseName, urlValues.Encode()), imageComponent.Version
 }
