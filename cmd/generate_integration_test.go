@@ -10,6 +10,7 @@ import (
 
 var _ = Describe("GenerateBOM - Integration", Label("integration"), Ordered, func() {
 	const testNamespace = "clx-test"
+	const testNamespace2 = "clx-test-2"
 	var k8client *k8.K8sClient
 	var bom *model.BOM
 	var err error
@@ -23,7 +24,7 @@ var _ = Describe("GenerateBOM - Integration", Label("integration"), Ordered, fun
 		})
 
 		DescribeTable("should have valid metadata, components and images",
-			func(namespaces []string, findNamespace bool) {
+			func(namespaces []string, findNamespace bool, findNamespace2 bool) {
 				// Set the filter for the namespaces
 				k8.K8Filter = model.Filter{NamespacedInclusions: []model.NamespacedInclusion{{Namespaces: namespaces}}}
 				InitializeFilterStruct(&k8.K8Filter)
@@ -43,6 +44,7 @@ var _ = Describe("GenerateBOM - Integration", Label("integration"), Ordered, fun
 				if len(components) > 0 {
 					Expect(components[0].PackageURL).To(Equal("pkg:k8s/Deployment/nginx-deployment?apiVersion=apps%2Fv1&namespace=clx-test"))
 				}
+
 				// Even when we are filtering out the test namespace, it will be in the BOM since it is not in a namespace.
 				components = bom.FindApplications(testNamespace, "Namespace", "")
 				Expect(len(components)).To(BeNumerically("==", 1))
@@ -60,15 +62,38 @@ var _ = Describe("GenerateBOM - Integration", Label("integration"), Ordered, fun
 					Expect(ownerRef).To(Equal("Deployment/nginx-deployment"))
 					//Image sha will be different for multi-arch images so checking substring
 					Expect(images[0].PackageURL).To(ContainSubstring("pkg:oci/library/nginx@sha256:"))
-					Expect(images[0].PackageURL).To(ContainSubstring("?repository_url=index.docker.io%2Flibrary%2Fnginx&version=1.27.4"))
+					Expect(images[0].PackageURL).To(ContainSubstring("?namespace=clx-test&ownerRef=Deployment%2Fnginx-deployment&repository_url=index.docker.io%2Flibrary%2Fnginx"))
 				} else {
 					Expect(len(images)).To(BeNumerically("==", 0))
 				}
+
+				// Check if the BOM contains the components from the other namespace.
+				components1 := bom.FindApplications("nginx-deployment", "Deployment", testNamespace2)
+				Expect(len(components1)).To(BeNumerically("==", map[bool]int{true: 1, false: 0}[findNamespace2]))
+				if len(components1) > 0 {
+					Expect(components1[0].PackageURL).To(Equal("pkg:k8s/Deployment/nginx-deployment?apiVersion=apps%2Fv1&namespace=clx-test-2"))
+				}
+
+				// check images
+				images1 := bom.FindContainers("index.docker.io/library/nginx", "Image", testNamespace2)
+				if findNamespace2 {
+					Expect(len(images1)).To(BeNumerically("==", 1))
+					ownerRef, found := images1[0].GetProperty("clx:k8s:ownerRef")
+					Expect(found).To(BeTrue())
+					Expect(ownerRef).To(Equal("Deployment/nginx-deployment"))
+					//Image sha will be different for multi-arch images so checking substring
+					Expect(images1[0].PackageURL).To(ContainSubstring("pkg:oci/library/nginx@sha256:"))
+					Expect(images1[0].PackageURL).To(ContainSubstring("?namespace=clx-test-2&ownerRef=Deployment%2Fnginx-deployment&repository_url=index.docker.io%2Flibrary%2Fnginx"))
+				} else {
+					Expect(len(images1)).To(BeNumerically("==", 0))
+				}
+
 			},
-			Entry("No Namespaces", []string{}, true),
-			Entry("Specific Test Namespace", []string{testNamespace}, true),
-			Entry("Specific Test Namespace and another non existent one", []string{testNamespace, "banana-lemon"}, true),
-			Entry("Existing Namespace without image", []string{"default"}, false),
+			Entry("No Namespaces", []string{}, true, true),
+			Entry("Specific Test Namespace", []string{testNamespace}, true, false),
+			Entry("Multiple valid test namespaces", []string{testNamespace, testNamespace2}, true, true),
+			Entry("Specific Test Namespace and another non existent one", []string{testNamespace, "banana-lemon"}, true, false),
+			Entry("Existing Namespace without image", []string{"default"}, false, false),
 		)
 	})
 })
